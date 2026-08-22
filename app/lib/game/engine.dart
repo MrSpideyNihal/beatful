@@ -226,23 +226,41 @@ GameState startRound({
     );
   }
 
-  final resolvedSeed = seed ?? cards.randomSeed();
+  var currentSeed = seed ?? cards.randomSeed();
   final resolvedNow = now ?? DateTime.now().millisecondsSinceEpoch;
-  final rng = cards.createRng(resolvedSeed);
-  final deck = shuffled
-      ? cards.shuffle(cards.buildDeck(), rng)
-      : cards.buildDeck();
-  final hands = rules
-      .dealHands(deck, seatCount)
-      .map((hand) => cards.sortHand(hand))
-      .toList(growable: false);
+  const maxRedeal = 10;
+  late List<List<String>> hands;
+  for (var attempt = 0; attempt < maxRedeal; attempt += 1) {
+    final rng = cards.createRng(currentSeed);
+    final deck = shuffled
+        ? cards.shuffle(cards.buildDeck(), rng)
+        : cards.buildDeck();
+    hands = rules
+        .dealHands(deck, seatCount)
+        .map((hand) => cards.sortHand(hand))
+        .toList(growable: false);
+
+    // Three-kings reshuffle: if any single player holds 3+ kings and there are
+    // more than 2 seats, redeal with a fresh seed. Skipped for 2-player games
+    // where concentrated kings are more expected.
+    if (seatCount > 2) {
+      final tooManyKings = hands.any(
+        (hand) => hand.where((c) => cards.rankOf(c) == 13).length >= 3,
+      );
+      if (tooManyKings) {
+        currentSeed = (rng() * 0xFFFFFFFF).floor();
+        continue;
+      }
+    }
+    break;
+  }
 
   final deal = ActionEntry(type: 'deal', at: resolvedNow, round: round);
   final state = GameState(
     seatCount: seatCount,
     round: round,
     rounds: rounds,
-    seed: resolvedSeed,
+    seed: currentSeed,
     timerSeconds: timerSeconds,
     status: GameStatus.inProgress,
     table: rules.createTable(),

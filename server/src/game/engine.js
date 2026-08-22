@@ -64,9 +64,28 @@ function startRound(options) {
     throw new GameError('BAD_TIMER', 'turn timer must be between 5 and 120 seconds');
   }
 
-  const rng = cards.createRng(seed);
-  const deck = shuffled ? cards.shuffle(cards.buildDeck(), rng) : cards.buildDeck();
-  const hands = rules.dealHands(deck, seatCount).map((hand) => cards.sortHand(hand));
+  let currentSeed = seed;
+  let hands;
+  const MAX_REDEAL = 10;
+  for (let attempt = 0; attempt < MAX_REDEAL; attempt += 1) {
+    const rng = cards.createRng(currentSeed);
+    const deck = shuffled ? cards.shuffle(cards.buildDeck(), rng) : cards.buildDeck();
+    hands = rules.dealHands(deck, seatCount).map((hand) => cards.sortHand(hand));
+
+    // Three-kings reshuffle: if any single player holds 3+ kings and there are
+    // more than 2 seats, redeal with a fresh seed derived from the current RNG.
+    // Skipped for 2-player games where concentrated kings are more expected.
+    if (seatCount > 2) {
+      const tooManyKings = hands.some(
+        (hand) => hand.filter((c) => cards.rankOf(c) === 13).length >= 3,
+      );
+      if (tooManyKings) {
+        currentSeed = Math.floor(rng() * 0xFFFFFFFF) >>> 0;
+        continue;
+      }
+    }
+    break;
+  }
 
   const state = {
     seatCount,

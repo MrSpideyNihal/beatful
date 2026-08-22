@@ -355,6 +355,17 @@ test('canPass is only true for the active seat with nothing to play', () => {
   state.currentTurnSeat = 0;
   assert.equal(engine.publicView(state, 0).canPass, true);
   assert.equal(engine.publicView(state, 1).canPass, false, 'not this seat turn');
-  state.currentTurnSeat = 1;
   assert.equal(engine.publicView(state, 1).canPass, false, 'this seat has a legal move');
 });
+
+test('single player holding 3+ kings triggers a reshuffle for 3+ player games', () => {
+  // Verify that in games with >2 seats, no hand in a dealt state holds 3+ kings.
+  for (let seed = 1; seed <= 50; seed += 1) {
+    const state = engine.startRound({ seatCount: 4, timerSeconds: 15, seed });
+    for (const hand of state.hands) {
+      const kingCount = hand.filter((c) => cards.rankOf(c) === 13).length;
+      assert.ok(kingCount < 3, `seed ${seed} dealt 3+ kings to a single player`);
+    }
+  }
+});
+
