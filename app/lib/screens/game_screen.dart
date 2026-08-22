@@ -6,6 +6,8 @@
 /// flown in from the seat that played it, a pass floats a label off that seat.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -89,6 +91,10 @@ class _GameBoardState extends State<GameBoard> {
   int _flightToken = 0;
   double _tableCardWidth = 40;
 
+  _PassNotice? _passNotice;
+  int _passToken = 0;
+  Timer? _passTimer;
+
   /// Where the finger left the card, so your own play starts from the card you
   /// actually touched rather than from somewhere near the middle.
   Rect? _tapRect;
@@ -99,6 +105,12 @@ class _GameBoardState extends State<GameBoard> {
   void initState() {
     super.initState();
     _actionKey = _keyOf(widget.view.lastAction);
+  }
+
+  @override
+  void dispose() {
+    _passTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -205,6 +217,29 @@ class _GameBoardState extends State<GameBoard> {
       action.auto ? 'Timed out, passed' : 'Pass',
       action.auto ? Icons.timer_off_rounded : Icons.block_rounded,
     );
+
+    final seatName = action.seatIndex == widget.view.yourSeat
+        ? 'You'
+        : narrate.seatName(widget.seats, action.seatIndex);
+    final text = action.auto
+        ? '$seatName timed out — passed'
+        : '$seatName passed!';
+
+    _passToken += 1;
+    final token = _passToken;
+    setState(() {
+      _passNotice = _PassNotice(
+        token: token,
+        text: text,
+        isAuto: action.auto,
+      );
+    });
+
+    _passTimer?.cancel();
+    _passTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (!mounted || _passToken != token) return;
+      setState(() => _passNotice = null);
+    });
   }
 
   void _pushFloater(ActionEntry action, String text, IconData icon) {
@@ -398,6 +433,61 @@ class _GameBoardState extends State<GameBoard> {
                     ),
                   );
                 },
+              ),
+            if (_passNotice case final notice?)
+              Positioned(
+                top: 72,
+                left: 16,
+                right: 16,
+                child: Center(
+                  child: PopIn(
+                    key: ValueKey(notice.token),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Palette.inkDark.withValues(alpha: 0.94),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: notice.isAuto ? Palette.coral : Palette.amber,
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (notice.isAuto ? Palette.coral : Palette.amber)
+                                .withValues(alpha: 0.45),
+                            blurRadius: 16,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            notice.isAuto
+                                ? Icons.timer_off_rounded
+                                : Icons.motion_photos_auto_rounded,
+                            color: notice.isAuto ? Palette.coral : Palette.amber,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            notice.text,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
             if (!live)
               Positioned.fill(
@@ -786,4 +876,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       ),
     );
   }
+}
+
+class _PassNotice {
+  const _PassNotice({
+    required this.token,
+    required this.text,
+    required this.isAuto,
+  });
+
+  final int token;
+  final String text;
+  final bool isAuto;
 }
