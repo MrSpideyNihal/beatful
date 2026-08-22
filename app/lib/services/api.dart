@@ -19,7 +19,7 @@ import 'package:http/http.dart' as http;
 /// The default is the deployed service. No secret ever lives in the client.
 const String apiBase = String.fromEnvironment(
   'BEATFUL_API',
-  defaultValue: 'https://beatful.onrender.com',
+  defaultValue: 'https://beatful-api.onrender.com',
 );
 
 /// How long a sleeping host is given to wake up before its silence counts as a

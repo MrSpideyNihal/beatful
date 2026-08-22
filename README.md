@@ -38,11 +38,13 @@ store it ended up using.
 
 `10.0.2.2` is how the Android emulator reaches the host machine. On a physical
 device use the machine's LAN address. Without the define the app talks to the
-deployed URL baked into `app/lib/services/api.dart`.
+deployed service, `https://beatful-api.onrender.com`, which is the default in
+`app/lib/services/api.dart`. Debug and profile builds are allowed to use plain
+HTTP so a LAN server works; release builds are HTTPS only.
 
-Release build:
+Release build, no define needed unless you are pointing it somewhere else:
 
-    flutter build apk --release --dart-define=BEATFUL_API=https://your-service.onrender.com
+    flutter build apk --release
 
 ## Tests
 
@@ -65,7 +67,9 @@ outbound address is not fixed, so `0.0.0.0/0` plus a strong password and a least
 privilege user is the practical setting. The connection string goes in Render's
 environment, never in a file in this repo.
 
-**Render.** One web service, no background worker needed.
+**Render.** One web service, no background worker needed. `render.yaml` at the
+root is a blueprint, so New > Blueprint reads the whole definition and asks only
+for `MONGO_URI`. To set it up by hand instead:
 
     Root directory     server
     Build command      npm ci
@@ -101,7 +105,7 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - run: curl -fsS https://your-service.onrender.com/health
+      - run: curl -fsS https://beatful-api.onrender.com/health
 ```
 
 GitHub throttles scheduled workflows on busy repositories, so treat this as best
