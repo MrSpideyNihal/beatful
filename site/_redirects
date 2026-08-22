@@ -1,0 +1,7 @@
+# Netlify Redirects for Beatful
+/play       /app/index.html   200
+/play/*     /app/index.html   200
+/app/*      /app/index.html   200
+/privacy    /privacy.html     200
+/terms      /terms.html       200
+/about      /about.html       200
