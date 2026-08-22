@@ -1,12 +1,12 @@
 {
-    "name": "beatful",
-    "short_name": "beatful",
+    "name": "Beatful",
+    "short_name": "Beatful",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#14755C",
+    "theme_color": "#0C5241",
+    "description": "Sevens, the Indian family card game.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

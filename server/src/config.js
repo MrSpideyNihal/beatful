@@ -48,6 +48,14 @@ const config = {
   authSecret,
   tokenTtlDays: readInt('TOKEN_TTL_DAYS', 365, 1, 3650),
 
+  // Browsers only. Empty means any origin, which is safe here because every
+  // authenticated call carries a bearer token in a header and nothing is
+  // authorised by a cookie, so another site cannot borrow a visitor's session.
+  corsOrigins: (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean),
+
   // Long polling. Kept under the 30s that most free tier proxies allow.
   pollTimeoutMs: readInt('POLL_TIMEOUT_MS', 25000, 1000, 55000),
 

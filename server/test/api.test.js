@@ -85,6 +85,52 @@ test('health and meta answer without a token', async () => {
   assert.match(meta.body.coinPolicy, /cannot be exchanged for real money/);
 });
 
+test('a browser preflight is answered, and an allowlist is honoured', async () => {
+  const origin = 'http://localhost:8080';
+
+  // Empty allowlist, which is the default: any page may call the API.
+  const preflight = await fetch(`${server.base}/room/ABC123/join`, {
+    method: 'OPTIONS',
+    headers: { origin, 'access-control-request-method': 'POST' },
+  });
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get('access-control-allow-origin'), origin);
+  assert.match(preflight.headers.get('access-control-allow-headers'), /authorization/);
+  assert.match(preflight.headers.get('access-control-allow-methods'), /POST/);
+  // Rate limited routes answer with Retry-After, which a page cannot read
+  // unless it is exposed.
+  assert.match(preflight.headers.get('access-control-expose-headers'), /Retry-After/);
+
+  // A real request carries the header too, otherwise the browser drops the body.
+  const real = await fetch(`${server.base}/health`, { headers: { origin } });
+  assert.equal(real.status, 200);
+  assert.equal(real.headers.get('access-control-allow-origin'), origin);
+  assert.equal(real.headers.get('vary'), 'Origin');
+
+  // No Origin means not a browser, and nothing is added.
+  const plain = await fetch(`${server.base}/health`);
+  assert.equal(plain.headers.get('access-control-allow-origin'), null);
+
+  const previous = config.corsOrigins.slice();
+  config.corsOrigins.length = 0;
+  config.corsOrigins.push('https://play.beatful.example');
+  try {
+    const rejected = await fetch(`${server.base}/health`, { headers: { origin } });
+    // Still served: CORS is enforced by the browser, not by us. The point is
+    // that the permission header is withheld, so the page cannot read this.
+    assert.equal(rejected.status, 200);
+    assert.equal(rejected.headers.get('access-control-allow-origin'), null);
+
+    const listed = await fetch(`${server.base}/health`, {
+      headers: { origin: 'https://play.beatful.example' },
+    });
+    assert.equal(listed.headers.get('access-control-allow-origin'), 'https://play.beatful.example');
+  } finally {
+    config.corsOrigins.length = 0;
+    config.corsOrigins.push(...previous);
+  }
+});
+
 test('unknown route returns the standard error shape, never a stack', async () => {
   const res = await server.anon.get('/no/such/thing');
   assert.equal(res.status, 404);

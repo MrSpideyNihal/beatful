@@ -16,6 +16,31 @@ function createApp() {
 
   app.set('trust proxy', 1); // Render and similar hosts terminate TLS in front.
   app.disable('x-powered-by');
+
+  /**
+   * The Android client does not need CORS. A browser build of the same app does,
+   * and so does anything poking at the API from a page. Answered before the body
+   * parser because a preflight carries no body.
+   */
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    const allowed =
+      origin && (config.corsOrigins.length === 0 || config.corsOrigins.includes(origin));
+    if (allowed) {
+      res.set('Access-Control-Allow-Origin', origin);
+      res.set('Vary', 'Origin');
+      res.set('Access-Control-Allow-Headers', 'authorization, content-type');
+      res.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+      res.set('Access-Control-Expose-Headers', 'Retry-After');
+      res.set('Access-Control-Max-Age', '86400');
+    }
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+    next();
+  });
+
   app.use(express.json({ limit: '32kb' }));
 
   // A malformed JSON body is a client mistake, not a server crash.

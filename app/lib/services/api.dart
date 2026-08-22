@@ -9,7 +9,6 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -162,7 +161,10 @@ class Api {
     if (error is TimeoutException) {
       return const ApiFailure('TIMEOUT', 'The server took too long to answer.');
     }
-    if (error is SocketException || error is http.ClientException) {
+    // A dropped connection, a refused port, a DNS miss: http wraps all of them
+    // in ClientException, including the socket faults, so this covers the lot
+    // without importing dart:io, which would stop the app compiling for web.
+    if (error is http.ClientException) {
       return const ApiFailure(
         'OFFLINE',
         'No connection. Check your internet and try again.',
