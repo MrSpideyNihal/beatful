@@ -21,6 +21,13 @@ abstract final class TableMetrics {
   static const badge = 34.0;
   static const badgeGap = 8.0;
   static const rowGap = 3.0;
+  static const columnGap = 10.0;
+
+  /// A wide screen puts the four suits in two columns of two, so each row only
+  /// gets half the board to lay its ranks out on.
+  static double columnWidth(double boardWidth, int columns) => columns <= 1
+      ? boardWidth
+      : (boardWidth - columnGap * (columns - 1)) / columns;
 
   static double rowWidth(double boardWidth, double cardWidth) =>
       (boardWidth - badge - badgeGap).clamp(cardWidth, double.infinity);
@@ -38,6 +45,7 @@ class TableBoard extends StatelessWidget {
     super.key,
     required this.table,
     required this.cardWidth,
+    this.columns = 1,
     this.lastCard,
     this.hiddenCard,
     this.rowKeys,
@@ -45,6 +53,9 @@ class TableBoard extends StatelessWidget {
 
   final rules.TableState table;
   final double cardWidth;
+
+  /// One column of four rows on a tall screen, two columns of two on a wide one.
+  final int columns;
 
   /// The card played most recently, ringed so the eye can find it.
   final String? lastCard;
@@ -61,13 +72,20 @@ class TableBoard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final rowWidth = TableMetrics.rowWidth(constraints.maxWidth, cardWidth);
+        final columnWidth = TableMetrics.columnWidth(
+          constraints.maxWidth,
+          columns,
+        );
+        final rowWidth = TableMetrics.rowWidth(columnWidth, cardWidth);
         final step = TableMetrics.step(rowWidth, cardWidth);
+        final perColumn = (cards.suits.length / columns).ceil();
 
-        return Column(
+        Widget stack(int index) => Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            for (final suit in cards.suits)
+            for (final suit in cards.suits.skip(index * perColumn).take(
+              perColumn,
+            ))
               Padding(
                 padding: const EdgeInsets.symmetric(
                   vertical: TableMetrics.rowGap,
@@ -94,6 +112,18 @@ class TableBoard extends StatelessWidget {
                   ],
                 ),
               ),
+          ],
+        );
+
+        if (columns <= 1) return stack(0);
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var index = 0; index < columns; index += 1) ...[
+              if (index > 0) const SizedBox(width: TableMetrics.columnGap),
+              SizedBox(width: columnWidth, child: stack(index)),
+            ],
           ],
         );
       },

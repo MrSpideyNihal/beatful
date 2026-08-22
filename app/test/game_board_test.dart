@@ -11,6 +11,8 @@ import 'package:beatful/screens/game_screen.dart';
 import 'package:beatful/state/cosmetics.dart';
 import 'package:beatful/widgets/anim.dart';
 import 'package:beatful/widgets/round_over_panel.dart';
+import 'package:beatful/widgets/seat_badge.dart';
+import 'package:beatful/widgets/table_board.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -426,6 +428,119 @@ void main() {
     // Released inside the test body: a tear down runs after the check that no
     // handle is left open.
     semantics.dispose();
+    await unmount(tester);
+  });
+
+  /* ------------------------------------------------------------- sideways */
+
+  Finder badge(String suit) => find.byWidgetPredicate(
+    (widget) => widget is SuitBadge && widget.suit == suit,
+  );
+
+  testWidgets('sideways the suits sit in two columns and a card still plays', (
+    tester,
+  ) async {
+    useLandscapeSurface(tester);
+    final played = <String>[];
+
+    await tester.pumpWidget(
+      wrap(
+        GameBoard(
+          header: const SizedBox.shrink(),
+          // A full table, which is the case that has the least room to spare.
+          view: buildView(
+            seatCount: 8,
+            handCounts: const [2, 13, 13, 13, 13, 13, 13, 13],
+            yourHand: const ['H7', 'H9'],
+            yourLegalMoves: const ['H7'],
+            lastAction: const {'type': 'deal', 'at': 0, 'round': 1},
+          ),
+          seats: testSeats(8),
+          onPlay: played.add,
+          onPass: () {},
+          onRefused: (_) {},
+        ),
+      ),
+    );
+    await settle(tester);
+
+    // Nothing overflowed, and the prompt, the hand and Pass are all still there.
+    expect(tester.takeException(), isNull);
+    expect(find.text('Your turn. Tap the glowing card.'), findsOneWidget);
+    expect(find.text('Your cards: 2'), findsOneWidget);
+    expect(find.text('Pass'), findsOneWidget);
+
+    // Hearts and diamonds down the left, clubs and spades down the right.
+    expect(find.byType(SuitBadge), findsNWidgets(4));
+    final hearts = tester.getCenter(badge('H'));
+    final diamonds = tester.getCenter(badge('D'));
+    final clubs = tester.getCenter(badge('C'));
+    final spades = tester.getCenter(badge('S'));
+    expect(hearts.dx, lessThan(clubs.dx));
+    expect(hearts.dy, closeTo(clubs.dy, 2));
+    expect(diamonds.dy, greaterThan(hearts.dy));
+    expect(diamonds.dx, closeTo(hearts.dx, 2));
+    expect(spades.dy, closeTo(diamonds.dy, 2));
+    expect(spades.dx, closeTo(clubs.dx, 2));
+
+    // The table is the wider half. The rail keeps its own third.
+    final rail = tester.getRect(find.byType(SeatStrip));
+    expect(rail.left, greaterThan(clubs.dx));
+
+    await tester.tap(find.byKey(const ValueKey('card-H7')));
+    expect(played, ['H7']);
+
+    await unmount(tester);
+  });
+
+  testWidgets('sideways a played card flies to the column its suit is in', (
+    tester,
+  ) async {
+    useLandscapeSurface(tester);
+
+    Widget board(Map<String, Object?>? lastAction) => wrap(
+      GameBoard(
+        header: const SizedBox.shrink(),
+        view: buildView(
+          currentTurnSeat: 2,
+          table: {'S': pile(7, 7)},
+          handCounts: const [13, 13, 12, 13],
+          yourHand: const ['H2'],
+          lastAction: lastAction,
+        ),
+        seats: testSeats(),
+        onPlay: (_) {},
+        onPass: () {},
+        onRefused: (_) {},
+      ),
+    );
+
+    await tester.pumpWidget(
+      board(const {'type': 'deal', 'at': 0, 'round': 1}),
+    );
+    await settle(tester);
+
+    await tester.pumpWidget(
+      board(const {
+        'type': 'play',
+        'at': 2000,
+        'seatIndex': 1,
+        'card': 'S7',
+        'direction': 'anchor',
+        'auto': false,
+      }),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 16));
+
+    final flight = tester.widget<CardFlight>(find.byType(CardFlight));
+    // The flight rect is measured against the board, so it is put back into
+    // screen coordinates before being compared with the badge.
+    final landing = flight.to.shift(tester.getTopLeft(find.byType(GameBoard)));
+    final spades = tester.getRect(badge('S'));
+    expect(landing.center.dy, closeTo(spades.center.dy, 3));
+    expect(landing.left, greaterThan(spades.right));
+
     await unmount(tester);
   });
 }

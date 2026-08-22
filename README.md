@@ -46,6 +46,32 @@ Release build, no define needed unless you are pointing it somewhere else:
 
     flutter build apk --release
 
+## Running it in a browser
+
+Useful for seeing the sideways board on a wide window, and for two players on one
+machine.
+
+    cd app
+    flutter run -d chrome --dart-define=BEATFUL_API=http://localhost:3000
+
+Or build it once and serve the output:
+
+    flutter build web --dart-define=BEATFUL_API=http://localhost:3000
+    python -m http.server 8080 --directory app/build/web
+
+The API answers browser preflights, so a page on any origin can call it. Set
+`CORS_ORIGINS` to a comma separated list to narrow that to your own pages.
+
+Four things are worse in a browser than on a phone, all of them the platform's
+rules rather than a choice:
+
+- No sound until the first tap. Browsers hold audio back until the page is used.
+- No haptics.
+- The guest id lives in `localStorage`, not the keystore, so two tabs on the same
+  origin are the same player. For two players on one machine open one normal
+  window and one private one.
+- `beatful://join/ABC123` cannot open a page. Read the code out and type it in.
+
 ## Tests
 
     cd server && npm test          # rules, engine, API, economy, bot simulation
@@ -126,6 +152,12 @@ a custom scheme tappable. For links that open from a browser you would need an
 - A seat that goes quiet keeps taking its turns on the timer, and the host is
   offered a button to hand it to a bot. It is never silently removed. The app
   says this in the leave dialog before anyone walks out.
+- The board has a layout for each way up, and all four orientations are unlocked.
+  Held tall, the four suit rows sit above your hand. Held sideways there is width
+  to spare and no height at all, so the seats move into a side rail and the suits
+  fold into two columns of two, which keeps the cards close to the size they are
+  in portrait. On a short sideways screen a table of five or more scrolls its seat
+  rail rather than squeezing the table.
 - Coins are a closed loop. They buy cosmetics and coin match entries and nothing
   else. There is no cash out, and the Terms screen in the app says so.
 - Every balance change is one atomic update with the balance checked in the
@@ -135,6 +167,6 @@ a custom scheme tappable. For links that open from a browser you would need an
 
 The spec asks for a pass on real hardware: touch targets under a thumb, timer
 visibility in daylight, WiFi off and on mid match, backgrounding during someone
-else's turn, and a match across two physical devices. That has not been run here,
-only the emulator and the automated suites. It is the last thing to do before
-shipping.
+else's turn, a match across two physical devices, and the sideways board on a real
+phone rather than a resized window. That has not been run here, only the emulator,
+a browser and the automated suites. It is the last thing to do before shipping.

@@ -250,76 +250,122 @@ class _GameBoardState extends State<GameBoard> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final handWidth = _handCardWidth(constraints);
+        // Held sideways there is width to spare and no height at all, so the
+        // seats move into a side rail and the table folds into two columns of two
+        // suits. Cards stay close to the size they are in portrait.
+        final wide = constraints.maxWidth > constraints.maxHeight;
+        final handWidth = _handCardWidth(constraints, wide: wide);
+        final columns = wide ? 2 : 1;
+        final rail = _railWidth(constraints);
+
+        final seats = Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: SeatStrip(
+            seats: widget.seats,
+            handCounts: view.handCounts,
+            currentTurnSeat: view.currentTurnSeat,
+            turnDeadline: deadline,
+            timerSeconds: view.timerSeconds,
+            thinkingSeat: widget.thinkingSeat,
+            hideSeat: view.yourSeat,
+            roundLive: live,
+            seatKeys: _seatKeys,
+          ),
+        );
+
+        final table = Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: LayoutBuilder(
+            builder: (context, tableBox) {
+              _tableCardWidth = _tableWidthFor(tableBox, columns);
+              return TableBoard(
+                table: view.table,
+                cardWidth: _tableCardWidth,
+                columns: columns,
+                lastCard: _lastPlayedCard(view),
+                hiddenCard: _hiddenCard,
+                rowKeys: _rowKeys,
+              );
+            },
+          ),
+        );
+
+        final status = _StatusPanel(
+          view: view,
+          seats: widget.seats,
+          notice: widget.notice,
+          paused: widget.paused,
+        );
+
+        final hand = HandStrip(
+          hand: view.yourHand,
+          legal: yourTurn ? view.yourLegalMoves : const [],
+          cardWidth: handWidth,
+          yourTurn: yourTurn,
+          dealToken: view.round * 1000 + view.seatCount,
+          onPlay: (card, rect) {
+            _tapRect = rect;
+            widget.onPlay(card);
+          },
+          onRefused: widget.onRefused,
+        );
+
+        final bottom = _BottomBar(
+          youKey: _youKey,
+          seat: _yourSeat(),
+          cardCount: _yourCount(view),
+          yourTurn: yourTurn,
+          deadline: deadline,
+          timerSeconds: view.timerSeconds,
+          hasLegalMove: view.yourLegalMoves.isNotEmpty,
+          onPass: widget.onPass,
+        );
 
         return Stack(
           key: _stackKey,
           children: [
-            Column(
-              children: [
-                widget.header,
-                if (widget.banner != null) widget.banner!,
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: SeatStrip(
-                    seats: widget.seats,
-                    handCounts: view.handCounts,
-                    currentTurnSeat: view.currentTurnSeat,
-                    turnDeadline: deadline,
-                    timerSeconds: view.timerSeconds,
-                    thinkingSeat: widget.thinkingSeat,
-                    hideSeat: view.yourSeat,
-                    roundLive: live,
-                    seatKeys: _seatKeys,
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: LayoutBuilder(
-                      builder: (context, tableBox) {
-                        _tableCardWidth = _tableWidthFor(tableBox);
-                        return TableBoard(
-                          table: view.table,
-                          cardWidth: _tableCardWidth,
-                          lastCard: _lastPlayedCard(view),
-                          hiddenCard: _hiddenCard,
-                          rowKeys: _rowKeys,
-                        );
-                      },
+            if (wide)
+              Column(
+                children: [
+                  widget.header,
+                  if (widget.banner != null) widget.banner!,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Expanded(child: table),
+                        // A full table of eight scrolls its seats rather than
+                        // squeezing the table for the two rows it would take.
+                        SizedBox(
+                          width: rail,
+                          child: SingleChildScrollView(child: seats),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                _StatusPanel(
-                  view: view,
-                  seats: widget.seats,
-                  notice: widget.notice,
-                  paused: widget.paused,
-                ),
-                HandStrip(
-                  hand: view.yourHand,
-                  legal: yourTurn ? view.yourLegalMoves : const [],
-                  cardWidth: handWidth,
-                  yourTurn: yourTurn,
-                  dealToken: view.round * 1000 + view.seatCount,
-                  onPlay: (card, rect) {
-                    _tapRect = rect;
-                    widget.onPlay(card);
-                  },
-                  onRefused: widget.onRefused,
-                ),
-                _BottomBar(
-                  youKey: _youKey,
-                  seat: _yourSeat(),
-                  cardCount: _yourCount(view),
-                  yourTurn: yourTurn,
-                  deadline: deadline,
-                  timerSeconds: view.timerSeconds,
-                  hasLegalMove: view.yourLegalMoves.isNotEmpty,
-                  onPass: widget.onPass,
-                ),
-              ],
-            ),
+                  status,
+                  // Pass stays under the rail, which sideways is under the thumb
+                  // of the hand holding that edge of the phone.
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(child: hand),
+                      SizedBox(width: rail, child: bottom),
+                    ],
+                  ),
+                ],
+              )
+            else
+              Column(
+                children: [
+                  widget.header,
+                  if (widget.banner != null) widget.banner!,
+                  seats,
+                  Expanded(child: table),
+                  status,
+                  hand,
+                  bottom,
+                ],
+              ),
             if (_flight case final flight?)
               CardFlight(
                 key: ValueKey(flight.token),
@@ -395,19 +441,28 @@ class _GameBoardState extends State<GameBoard> {
     return view.handCounts[seat];
   }
 
+  /// The side rail on a wide screen. Wide enough for two seats abreast, and never
+  /// more than a third of the board.
+  double _railWidth(BoxConstraints constraints) =>
+      (constraints.maxWidth * 0.30).clamp(210.0, 300.0);
+
   /// Hand cards are as big as the width allows, then trimmed so a short screen
-  /// still leaves the table enough room to show four rows.
-  double _handCardWidth(BoxConstraints constraints) {
-    final byWidth = constraints.maxWidth / 6.6;
-    final byHeight = (constraints.maxHeight * 0.24 - 58) * Sizes.cardAspect;
+  /// still leaves the table enough room to show every suit.
+  double _handCardWidth(BoxConstraints constraints, {required bool wide}) {
+    final byWidth = constraints.maxWidth / (wide ? 9.5 : 6.6);
+    final byHeight =
+        (constraints.maxHeight * (wide ? 0.34 : 0.24) - 58) * Sizes.cardAspect;
     final chosen = byWidth < byHeight ? byWidth : byHeight;
     return chosen.clamp(40.0, 78.0);
   }
 
-  /// Four rows, thirteen ranks each. Width sets the overlap, height sets the cap.
-  double _tableWidthFor(BoxConstraints constraints) {
-    final byWidth = TableMetrics.rowWidth(constraints.maxWidth, 20) / 6.4;
-    final rowHeight = constraints.maxHeight / 4 - TableMetrics.rowGap * 2;
+  /// Thirteen ranks per row. Width sets the overlap, height sets the cap, and the
+  /// column count decides how much of each the rows get.
+  double _tableWidthFor(BoxConstraints constraints, int columns) {
+    final columnWidth = TableMetrics.columnWidth(constraints.maxWidth, columns);
+    final byWidth = TableMetrics.rowWidth(columnWidth, 20) / 6.4;
+    final rows = (cards.suits.length / columns).ceil();
+    final rowHeight = constraints.maxHeight / rows - TableMetrics.rowGap * 2;
     final byHeight = rowHeight * Sizes.cardAspect;
     final chosen = byWidth < byHeight ? byWidth : byHeight;
     return chosen.clamp(18.0, 74.0);

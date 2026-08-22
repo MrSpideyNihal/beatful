@@ -19,9 +19,13 @@ import 'theme.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
-    // The board is laid out for a tall screen: four suit rows above a hand.
+    // Both ways up. The board has a layout for each: four suit rows above the
+    // hand when it is held tall, two columns of two beside a side rail when it
+    // is held sideways.
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
   ]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

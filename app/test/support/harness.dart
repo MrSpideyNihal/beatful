@@ -47,6 +47,18 @@ void usePhoneSurface(WidgetTester tester) {
   });
 }
 
+/// The same phone turned sideways, 780x360. The shortest board the wide layout
+/// has to survive, so it is the one worth testing against.
+void useLandscapeSurface(WidgetTester tester) {
+  final view = tester.view;
+  view.physicalSize = const Size(2340, 1080);
+  view.devicePixelRatio = 3;
+  addTearDown(() {
+    view.resetPhysicalSize();
+    view.resetDevicePixelRatio();
+  });
+}
+
 /// Runs the entrance animations out.
 ///
 /// pumpAndSettle would spin for ever here, because the playable badge and the
