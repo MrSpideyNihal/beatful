@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Profile builds only, and the same reasoning as the debug copy: a development
+  server runs on plain HTTP on the LAN, and profile mode is where animation
+  smoothness is measured. Release builds never see this file.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

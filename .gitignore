@@ -1,0 +1,37 @@
+# Secrets. Never commit these. MONGO_URI and AUTH_SECRET live in the host
+# environment (Render dashboard) and in local .env files only.
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+*.tsbuildinfo
+
+# Flutter and Dart
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/build/
+app/android/.gradle/
+app/android/local.properties
+app/android/key.properties
+app/android/app/upload-keystore.jks
+app/android/app/*.keystore
+app/ios/
+app/.packages
+.pub-cache/
+.pub/
+
+# Editors and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Local scratch
+coverage/
+*.log
+tmp/

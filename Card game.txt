@@ -1,0 +1,936 @@
+# Beatful — Complete Rules and How to Play
+
+## 1. What Is Beatful?
+
+**Beatful** is a traditional Indian card game played using a standard deck of **52 playing cards**.
+
+The main idea is simple:
+
+> **All four 7s are the starting point, and players build each suit outward from 7, going both higher and lower.**
+
+Players take turns placing cards on the table. If a player has a card that can legally be played, they can place it. If they cannot make a legal move, they **Pass**.
+
+The objective is to **get rid of all the cards in your hand before the other players**.
+
+The game is commonly known by different names and may have slightly different rules depending on the region or group playing it.
+
+---
+
+# 2. Number of Players
+
+Beatful can be played with different numbers of players.
+
+Common setups include:
+
+* 2 players
+* 3 players
+* **4 players**
+* 5 or more players
+
+Four players is one of the most natural setups because the 52-card deck divides evenly:
+
+**52 ÷ 4 = 13 cards per player**
+
+However, the game can still be played when the cards do not divide evenly.
+
+---
+
+# 3. Cards Required
+
+You need:
+
+* **1 standard 52-card deck**
+* No Jokers
+
+The deck contains four suits:
+
+* ♥ Hearts
+* ♦ Diamonds
+* ♣ Clubs
+* ♠ Spades
+
+Each suit contains 13 cards:
+
+**A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K**
+
+---
+
+# 4. The Most Important Rule
+
+The **7 is the center of every suit**.
+
+Every suit starts with its 7.
+
+For example:
+
+### Hearts
+
+```text
+A  2  3  4  5  6  7  8  9  10  J  Q  K
+                  ↑
+               Starting
+```
+
+### Diamonds
+
+```text
+A  2  3  4  5  6  7  8  9  10  J  Q  K
+                  ↑
+               Starting
+```
+
+The same applies to Clubs and Spades.
+
+---
+
+# 5. How Cards Are Placed
+
+Cards can only be placed next to a card of the **same suit**.
+
+The cards must follow their normal numerical order.
+
+Starting from 7:
+
+### Going upward
+
+```text
+7 → 8 → 9 → 10 → J → Q → K
+```
+
+### Going downward
+
+```text
+7 → 6 → 5 → 4 → 3 → 2 → A
+```
+
+Therefore, once 7♥ has been played:
+
+* 6♥ can be played
+* 8♥ can be played
+
+After 8♥:
+
+* 9♥ can be played
+
+After 6♥:
+
+* 5♥ can be played
+
+And so on.
+
+---
+
+# 6. Example of a Suit Being Built
+
+Suppose the first card played is:
+
+**7♥**
+
+The table now looks like:
+
+```text
+♥
+
+7
+```
+
+The next player could play either:
+
+```text
+6♥
+```
+
+or
+
+```text
+8♥
+```
+
+Suppose someone plays 8♥:
+
+```text
+7♥  8♥
+```
+
+The next possible heart cards are:
+
+```text
+6♥ or 9♥
+```
+
+Suppose someone plays 6♥:
+
+```text
+6♥  7♥  8♥
+```
+
+Now the available heart cards are:
+
+```text
+5♥ or 9♥
+```
+
+The sequence continues until the entire suit has been completed:
+
+```text
+A  2  3  4  5  6  7  8  9  10  J  Q  K
+                  ↑
+               Starting
+```
+
+---
+
+# 7. All Four Suits Are Built Separately
+
+The same process happens for all four suits.
+
+The table may eventually look something like:
+
+```text
+♥  A  2  3  4  5  6  7  8  9  10  J  Q  K
+
+♦        4  5  6  7  8  9  10
+
+♣              6  7  8  9
+
+♠  A  2  3  4  5  6  7  8
+```
+
+Each row is independent.
+
+You cannot play a heart card on a diamond sequence.
+
+For example:
+
+**7♥ → 8♥**
+
+is legal.
+
+But:
+
+**7♥ → 8♦**
+
+is not legal.
+
+---
+
+# 8. How a Turn Works
+
+Players take turns in a fixed order.
+
+For example:
+
+```text
+Player 1
+   ↓
+Player 2
+   ↓
+Player 3
+   ↓
+Player 4
+   ↓
+Player 1
+   ↓
+...
+```
+
+On your turn, you check your cards and see whether you have a legal move.
+
+You generally have two choices:
+
+### Option 1 — Play a Card
+
+If you have a card that can be placed legally, you may play it.
+
+### Option 2 — Pass
+
+If you don't have a playable card, you say:
+
+**"Pass."**
+
+Then the turn moves to the next player.
+
+---
+
+# 9. What Cards Can Be Played?
+
+A card is playable if the immediately preceding card in that direction has already been placed.
+
+For example, if the table contains:
+
+```text
+♥  5  6  7  8  9
+```
+
+Then the next playable Hearts are:
+
+```text
+4♥
+10♥
+```
+
+You cannot immediately play:
+
+```text
+3♥
+J♥
+```
+
+because 4♥ and 10♥ have not been played yet.
+
+---
+
+# 10. You Cannot Skip Cards
+
+This is one of the most important rules.
+
+Suppose the table contains:
+
+```text
+♥  6  7  8
+```
+
+You cannot play:
+
+```text
+10♥
+```
+
+because 9♥ has not been played.
+
+You must build the sequence continuously:
+
+```text
+6 → 7 → 8 → 9 → 10
+```
+
+Therefore:
+
+**9♥ must be played before 10♥.**
+
+---
+
+# 11. The 7 Is Special
+
+The 7 is the card that opens a suit.
+
+Before 7♥ is played, cards such as:
+
+```text
+6♥
+5♥
+8♥
+9♥
+```
+
+cannot normally be placed.
+
+Once **7♥** is played, the suit becomes active.
+
+Then players can build:
+
+```text
+A ← 2 ← 3 ← 4 ← 5 ← 6 ← 7 → 8 → 9 → 10 → J → Q → K
+```
+
+---
+
+# 12. What Happens When You Have No Move?
+
+Suppose it is your turn.
+
+Your hand contains cards, but none of them can legally be placed on the table.
+
+You say:
+
+**Pass.**
+
+For example, the table currently has:
+
+```text
+♥  6 7 8
+
+♦  7 8
+
+♣  4 5 6 7
+
+♠  7 8 9
+```
+
+If your hand contains:
+
+```text
+♥ 3
+♦ 10
+♣ K
+♠ 4
+```
+
+none of these may be playable at this moment.
+
+Therefore:
+
+**Pass.**
+
+---
+
+# 13. Passing Does Not Mean You Are Out
+
+Passing does **not** mean that you lose or leave the game.
+
+It only means:
+
+> "I don't have a legal move right now."
+
+You continue playing when your turn comes around again.
+
+A card that was impossible to play earlier may become playable after another player places a card.
+
+---
+
+# 14. Example of Passing
+
+Imagine:
+
+```text
+♥  5 6 7 8
+
+♦  7
+
+♣  7 8 9
+
+♠  7 8
+```
+
+You have:
+
+```text
+9♥
+8♦
+10♣
+9♠
+```
+
+Possible moves:
+
+* 9♥ → playable
+* 8♦ → playable
+* 10♣ → NOT playable because 9♣ is missing
+* 9♠ → playable
+
+So you can choose one of the playable cards.
+
+If instead your hand contained only:
+
+```text
+10♣
+Q♦
+5♠
+3♥
+```
+
+and none were playable, you would:
+
+**Pass.**
+
+---
+
+# 15. Choosing Which Card to Play
+
+If you have multiple legal cards, you normally choose which one to play.
+
+For example, suppose:
+
+```text
+♥  6 7 8
+
+♦  7 8
+
+♣  7
+
+♠  5 6 7
+```
+
+Your hand contains:
+
+```text
+5♥
+9♥
+6♦
+8♣
+8♠
+```
+
+Several cards may be playable.
+
+You need to decide which one is most useful.
+
+This is where **strategy** becomes important.
+
+---
+
+# 16. Basic Strategy
+
+Beatful is not only about luck.
+
+Your decisions can affect the game significantly.
+
+A basic strategy is:
+
+### Try to get rid of difficult cards
+
+If you have a card that is difficult to play later, playing it when possible can be useful.
+
+### Watch what other players need
+
+Pay attention to cards that have not appeared yet.
+
+For example, if 8♥ has not been played, someone may be waiting for it to continue the Hearts sequence.
+
+### Think before playing
+
+If you have multiple choices, don't automatically play the first available card.
+
+Consider:
+
+* Which card helps you reduce your hand?
+* Which card opens more possibilities?
+* Which card might help another player?
+* Which cards are other players likely to be holding?
+
+---
+
+# 17. Blocking / Holding Cards
+
+One of the interesting strategic aspects of Beatful is that a player may have a card that other players need.
+
+For example:
+
+```text
+♥  7 8 9
+```
+
+The next card required is:
+
+**10♥**
+
+Suppose you have 10♥.
+
+Another player may be waiting for it.
+
+Depending on the exact rules your group uses, you may choose when to play it if you have other legal moves.
+
+This can affect the flow of the game.
+
+---
+
+# 18. Example Round
+
+Imagine four players:
+
+* Player A
+* Player B
+* Player C
+* Player D
+
+Player A starts.
+
+Suppose Player A has:
+
+**7♥**
+
+Player A plays:
+
+```text
+7♥
+```
+
+Now Player B gets a turn.
+
+Player B has:
+
+**8♥**
+
+So they play:
+
+```text
+7♥ 8♥
+```
+
+Player C has neither 6♥ nor 9♥ and cannot play anything else.
+
+Player C says:
+
+**Pass.**
+
+Player D has:
+
+**6♥**
+
+They play:
+
+```text
+6♥ 7♥ 8♥
+```
+
+Now the sequence has expanded.
+
+Player A may now be able to play:
+
+**9♥**
+
+And the game continues.
+
+---
+
+# 19. Complete Suit
+
+Eventually, players may complete an entire suit.
+
+For example:
+
+```text
+♥ A 2 3 4 5 6 7 8 9 10 J Q K
+```
+
+Once all 13 Hearts are on the table, there are no more Hearts to play.
+
+The same process happens with:
+
+```text
+♦ A 2 3 4 5 6 7 8 9 10 J Q K
+
+♣ A 2 3 4 5 6 7 8 9 10 J Q K
+
+♠ A 2 3 4 5 6 7 8 9 10 J Q K
+```
+
+Eventually all 52 cards are placed.
+
+---
+
+# 20. How Do You Win?
+
+The most common objective is:
+
+> **Be the first player to get rid of all the cards in your hand.**
+
+For example:
+
+```text
+Player A → 0 cards
+Player B → 3 cards
+Player C → 5 cards
+Player D → 5 cards
+```
+
+Player A wins the round.
+
+---
+
+# 21. Ranking the Remaining Players
+
+If your group wants to determine second, third and fourth place, the players can be ranked based on how many cards remain.
+
+For example:
+
+```text
+Player A → 0 cards → 1st
+Player B → 2 cards → 2nd
+Player C → 5 cards → 3rd
+Player D → 6 cards → 4th
+```
+
+---
+
+# 22. Scoring Variations
+
+Different groups may use different scoring systems.
+
+A simple scoring system is:
+
+### Winner
+
+The player who gets rid of all their cards receives:
+
+**0 penalty points**
+
+The other players receive penalty points based on the cards remaining in their hands.
+
+For example:
+
+```text
+Player A → 0 cards → 0 points
+Player B → 2 cards → 2 points
+Player C → 5 cards → 5 points
+Player D → 8 cards → 8 points
+```
+
+After several rounds, the player with the lowest total score can be declared the overall winner.
+
+However, **scoring is a house rule**, so your local version of Beatful may use a different system.
+
+---
+
+# 23. Important Rule Variations
+
+Because Beatful is commonly played as a local/traditional game, different groups may have different rules.
+
+Before starting, players should agree on:
+
+1. Who starts?
+2. Is the player holding a particular card required to start?
+3. Are players allowed to pass even when they have a legal move?
+4. How is scoring calculated?
+5. What happens if everyone passes?
+6. How many rounds are played?
+7. Is the first player to finish automatically the winner?
+8. Are there penalties for passing?
+9. Can players play multiple cards in one turn?
+10. What happens when someone finishes?
+
+These rules can vary from one group to another.
+
+---
+
+# 24. Recommended Standard Rules
+
+For a simple and easy-to-understand version, use these rules:
+
+### Setup
+
+* Use one 52-card deck.
+* Remove Jokers.
+* Shuffle the deck.
+* Deal all cards to the players.
+
+### Starting
+
+The player holding **7♥** starts by placing it.
+
+If your group uses a different starting rule, agree on it before the game.
+
+### Turns
+
+On your turn:
+
+* Play **one legal card**, OR
+* Say **Pass** if you cannot play.
+
+### Card placement
+
+Cards must:
+
+* Be the same suit.
+* Connect directly to the existing sequence.
+* Follow the numerical order.
+
+### 7s
+
+Each 7 opens its respective suit.
+
+### Winning
+
+The first player to have **zero cards** wins.
+
+---
+
+# 25. Quick Reference
+
+The entire game can be remembered with this simple rule:
+
+```text
+                    7
+                   / \
+                  ↓   ↓
+A ← 2 ← 3 ← 4 ← 5 ← 6   8 → 9 → 10 → J → Q → K
+```
+
+For every suit:
+
+```text
+A 2 3 4 5 6 [7] 8 9 10 J Q K
+            ↑
+          START
+```
+
+You can only extend the sequence one card at a time.
+
+---
+
+# 26. Example of a Full Table
+
+A late-game table might look like:
+
+```text
+HEARTS
+A  2  3  4  5  6  7  8  9  10  J  Q  K
+
+DIAMONDS
+A  2  3  4  5  6  7  8  9  10  J
+
+CLUBS
+A  2  3  4  5  6  7  8  9
+
+SPADES
+A  2  3  4  5  6  7  8  9  10
+```
+
+The remaining playable cards are:
+
+```text
+♦ Q
+♣ 10
+♠ J
+```
+
+Players continue placing cards until someone gets rid of their entire hand.
+
+---
+
+# 27. Beginner Example
+
+Suppose you receive:
+
+```text
+7♥
+8♥
+10♥
+4♣
+7♦
+6♦
+K♠
+```
+
+If the game has just started and only 7♥ has been placed, you can play:
+
+```text
+8♥
+```
+
+because it connects to 7♥.
+
+You cannot play:
+
+```text
+10♥
+```
+
+because 9♥ is missing.
+
+You also cannot play:
+
+```text
+4♣
+```
+
+because 7♣ has not been opened yet.
+
+If 7♦ has been played later, you can play:
+
+```text
+6♦
+```
+
+because it connects directly below 7♦.
+
+---
+
+# 28. Common Mistakes
+
+### Mistake 1 — Skipping numbers
+
+Incorrect:
+
+```text
+7♥ → 9♥
+```
+
+Correct:
+
+```text
+7♥ → 8♥ → 9♥
+```
+
+### Mistake 2 — Mixing suits
+
+Incorrect:
+
+```text
+7♥ → 8♦
+```
+
+Correct:
+
+```text
+7♥ → 8♥
+```
+
+### Mistake 3 — Playing before the 7
+
+You cannot normally start a suit with 6, 8, 9, etc.
+
+The 7 opens the suit.
+
+### Mistake 4 — Forgetting that the sequence goes both ways
+
+After 7 you can build:
+
+```text
+DOWN:
+7 → 6 → 5 → 4 → 3 → 2 → A
+```
+
+and:
+
+```text
+UP:
+7 → 8 → 9 → 10 → J → Q → K
+```
+
+### Mistake 5 — Thinking Pass means losing
+
+Passing simply means you don't make a move during that turn.
+
+---
+
+# 29. The Game in One Minute
+
+If you need to explain Beatful to someone quickly, say:
+
+> "It's a card game using a 52-card deck. The 7 of each suit starts that suit. Once a 7 is on the table, players can build that suit upward and downward one card at a time. For example, 7, 8, 9, 10 or 7, 6, 5, 4. You can only play the next card in the sequence and it has to be the same suit. If you don't have a playable card, you pass. Keep playing until someone gets rid of all their cards. The first player with no cards wins."
+
+---
+
+# 30. Final Rule Summary
+
+| Rule               | Description                |
+| ------------------ | -------------------------- |
+| Deck               | Standard 52-card deck      |
+| Jokers             | Not used                   |
+| Suits              | ♥ ♦ ♣ ♠                    |
+| Starting cards     | 7 of each suit             |
+| Direction          | Both higher and lower      |
+| Sequence           | A-2-3-4-5-6-7-8-9-10-J-Q-K |
+| Same suit required | Yes                        |
+| Skipping cards     | Not allowed                |
+| Cards per turn     | Usually 1                  |
+| No playable card   | Pass                       |
+| Main objective     | Get rid of all cards       |
+| Winner             | First player with 0 cards  |
+| Scoring            | Depends on house rules     |
+
+## The Core Concept
+
+The easiest way to remember Beatful is:
+
+**7 is the center.**
+
+```text
+A ← 2 ← 3 ← 4 ← 5 ← 6 ← [7] → 8 → 9 → 10 → J → Q → K
+                               
+```
+
+Build **away from 7**, one card at a time, for each of the four suits.
+
+**Play if you can. Pass if you can't. Empty your hand to win.**

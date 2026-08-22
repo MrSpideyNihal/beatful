@@ -1,0 +1,35 @@
+# Render blueprint. Create the service from this file with New > Blueprint and
+# point it at this repository, or set the same values by hand in the dashboard.
+#
+# MONGO_URI is the only value you have to paste: it is a secret, so it is marked
+# sync: false and Render will prompt for it. AUTH_SECRET Render generates itself.
+services:
+  - type: web
+    name: beatful-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      # From Atlas. Least privilege user, one database. Never committed.
+      - key: MONGO_URI
+        sync: false
+      # Signs guest tokens. Changing it logs every guest out, so leave it alone
+      # once players exist.
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_DB_NAME
+        value: beatful
+      - key: LOG_LEVEL
+        value: info
+      # Belt and braces: production must never fall back to the memory store.
+      - key: USE_MEMORY_DB
+        value: false
+      # Held below the proxy limit so a parked poll is answered, not cut off.
+      - key: POLL_TIMEOUT_MS
+        value: 25000

@@ -1,0 +1,24 @@
+{
+  "name": "beatful-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Beatful card game API server",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test",
+    "test:sim": "node --test test/simulation.test.js",
+    "simulate": "node scripts/simulate.js",
+    "vectors": "node scripts/gen-vectors.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongodb": "^6.8.0"
+  }
+}
