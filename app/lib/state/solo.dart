@@ -20,6 +20,7 @@ import '../game/narrate.dart' as narrate;
 import '../models/avatar.dart';
 import '../models/seat_info.dart';
 import '../services/cues.dart';
+import 'identity.dart';
 import 'profile.dart';
 import 'solo_config.dart';
 
@@ -162,6 +163,7 @@ class SoloController extends AutoDisposeNotifier<SoloGame> {
         _lastStatus = _game.status;
         if (_game.winnerSeat == humanSeat) {
           _cues.win();
+          ref.read(identityProvider.notifier).awardCoins(10);
         } else {
           _cues.lose();
         }

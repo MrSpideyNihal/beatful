@@ -243,6 +243,17 @@ class IdentityController extends Notifier<Identity> {
     }
   }
 
+  /// Award coins locally (e.g. winning a solo match or offline reward).
+  void awardCoins(int amount) {
+    if (amount <= 0) return;
+    final current = state.account;
+    if (current != null) {
+      state = state.copyWith(
+        account: current.copyWith(coins: current.coins + amount),
+      );
+    }
+  }
+
   /// Pulls a fresh balance, used when returning to Home from a match.
   Future<void> refresh() async {
     if (!state.isReady) return;
