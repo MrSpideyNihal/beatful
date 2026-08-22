@@ -44,14 +44,14 @@ class SeatInfo {
 /// Names for bot seats. Short, easy to read at a glance, and stable per seat so a
 /// player can learn who is who during a match.
 const List<String> botRoster = [
-  'Ravi',
-  'Meera',
-  'Arjun',
-  'Priya',
-  'Kabir',
-  'Anita',
-  'Dev',
-  'Sneha',
+  'Raj',
+  'Akshay',
+  'Piya',
+  'Kusum',
+  'Arvind',
+  'Kiran',
+  'Shobha',
+  'Prakash',
 ];
 
 String botName(int slot) => botRoster[slot.abs() % botRoster.length];

@@ -111,12 +111,12 @@ void main() {
     test('seats are ordered by seat index, not by arrival', () {
       final room = RoomView.fromJson(
         lobbyRoom(
-          players: [seat(2, name: 'Meera'), seat(0, name: 'Ravi'), seat(1)],
+          players: [seat(2, name: 'Akshay'), seat(0, name: 'Raj'), seat(1)],
         ),
       );
       expect([for (final p in room.players) p.seatIndex], [0, 1, 2]);
-      expect(room.seats.first.name, 'Ravi');
-      expect(room.seats.last.name, 'Meera');
+      expect(room.seats.first.name, 'Raj');
+      expect(room.seats.last.name, 'Akshay');
     });
 
     test('a player is connected unless the server says otherwise', () {
@@ -248,8 +248,8 @@ void main() {
       final room = RoomView.fromJson(
         lobbyRoom(
           notices: [
-            {'id': 'n1', 'kind': 'joined', 'text': 'Ravi joined', 'at': 1},
-            {'id': 'n2', 'kind': 'away', 'text': 'Meera went away', 'at': 2},
+            {'id': 'n1', 'kind': 'joined', 'text': 'Raj joined', 'at': 1},
+            {'id': 'n2', 'kind': 'away', 'text': 'Akshay went away', 'at': 2},
           ],
         ),
       );
@@ -276,7 +276,7 @@ void main() {
         lobbyRoom(
           notices: [
             'not a notice',
-            {'id': 'n1', 'kind': 'joined', 'text': 'Ravi joined'},
+            {'id': 'n1', 'kind': 'joined', 'text': 'Raj joined'},
           ],
         ),
       );

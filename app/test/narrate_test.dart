@@ -16,9 +16,9 @@ import 'support/harness.dart';
 
 const seats = <SeatInfo>[
   SeatInfo(index: 0, name: 'You', avatar: 0, isYou: true),
-  SeatInfo(index: 1, name: 'Ravi', avatar: 1, isBot: true),
-  SeatInfo(index: 2, name: 'Meera', avatar: 2, isBot: true),
-  SeatInfo(index: 3, name: 'Arjun', avatar: 3, isBot: true),
+  SeatInfo(index: 1, name: 'Raj', avatar: 1, isBot: true),
+  SeatInfo(index: 2, name: 'Akshay', avatar: 2, isBot: true),
+  SeatInfo(index: 3, name: 'Piya', avatar: 3, isBot: true),
 ];
 
 /// An unshuffled four seat deal: seat 0 holds every heart, seat 1 every diamond,
@@ -39,7 +39,7 @@ void main() {
     });
 
     test('other seats read as their name', () {
-      expect(narrate.seatName(seats, 2), 'Meera');
+      expect(narrate.seatName(seats, 2), 'Akshay');
     });
 
     test('an unknown seat does not crash the sentence', () {
@@ -60,7 +60,7 @@ void main() {
       final state = fixedDeal();
       engine.playCard(state, 1, 'D7', 2000);
       final view = engine.publicView(state, 0, 2000);
-      expect(narrate.describeLastAction(view, seats), 'Ravi played 7♦');
+      expect(narrate.describeLastAction(view, seats), 'Raj played 7♦');
     });
 
     test('a card you played', () {
@@ -80,7 +80,7 @@ void main() {
       final view = engine.publicView(state, 0, 16000);
       expect(
         narrate.describeLastAction(view, seats),
-        "Ravi's turn timed out - auto-played 7♦",
+        "Raj's turn timed out - auto-played 7♦",
       );
     });
 
@@ -91,7 +91,7 @@ void main() {
       );
       expect(
         narrate.describeLastAction(view, seats),
-        "Ravi's turn timed out - nothing to play, passed",
+        "Raj's turn timed out - nothing to play, passed",
       );
     });
 
@@ -109,7 +109,7 @@ void main() {
       final view = buildView(
         lastAction: {'type': 'pass', 'at': 1, 'seatIndex': 3, 'auto': false},
       );
-      expect(narrate.describeLastAction(view, seats), 'Arjun passed');
+      expect(narrate.describeLastAction(view, seats), 'Piya passed');
     });
 
     test('the end of a round', () {
@@ -154,7 +154,7 @@ void main() {
 
     test('somebody else is thinking', () {
       final view = buildView(currentTurnSeat: 2);
-      expect(narrate.turnPrompt(view, seats), 'Waiting for Meera');
+      expect(narrate.turnPrompt(view, seats), 'Waiting for Akshay');
     });
 
     test('between rounds', () {
