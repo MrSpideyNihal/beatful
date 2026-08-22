@@ -25,12 +25,16 @@ function createApp() {
   app.use((req, res, next) => {
     const origin = req.headers.origin;
     const allowed =
-      origin && (config.corsOrigins.length === 0 || config.corsOrigins.includes(origin));
+      origin &&
+      (config.corsOrigins.length === 0 ||
+        config.corsOrigins.includes(origin) ||
+        config.corsOrigins.includes('*'));
+
     if (allowed) {
       res.set('Access-Control-Allow-Origin', origin);
       res.set('Vary', 'Origin');
-      res.set('Access-Control-Allow-Headers', 'authorization, content-type');
-      res.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+      res.set('Access-Control-Allow-Headers', 'authorization, content-type, x-requested-with');
+      res.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
       res.set('Access-Control-Expose-Headers', 'Retry-After');
       res.set('Access-Control-Max-Age', '86400');
     }
