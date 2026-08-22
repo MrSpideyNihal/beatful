@@ -1,0 +1,41 @@
+# Netlify configuration file in repository root
+
+[build]
+  publish = "site"
+
+[[redirects]]
+  from = "/play"
+  to = "/app/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/play/*"
+  to = "/app/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app/*"
+  to = "/app/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms"
+  to = "/terms.html"
+  status = 200
+
+[[redirects]]
+  from = "/about"
+  to = "/about.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "ALLOWALL"
+    X-Content-Type-Options = "nosniff"
+    Access-Control-Allow-Origin = "*"
