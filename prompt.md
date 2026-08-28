@@ -1,4 +1,4 @@
-# BUILD PROMPT: Beatful — Multiplayer Card Game (Android, Flutter + Node.js + MongoDB)
+# BUILD PROMPT: Beatful -  Multiplayer Card Game (Android, Flutter + Node.js + MongoDB)
 
 You are building a **complete, production-quality, bug-free** mobile card game called **Beatful**, targeting **Android** first. Read this entire spec before writing any code. Build incrementally, test each layer before moving to the next, and handle every error path explicitly — no silent failures, no unhandled exceptions, no crashes.
 
