@@ -195,10 +195,10 @@ class GameState {
   int passStreak;
 }
 
-/// Traditional sevens opener: whoever holds the seven of diamonds moves first.
+/// Traditional sevens opener: whoever holds the seven of hearts moves first.
 /// Deterministic, easy to explain, and the first seat to act always has a move.
 int findStartingSeat(List<List<String>> hands) {
-  final opener = cards.makeCard('D', cards.anchorRank);
+  final opener = cards.makeCard('H', cards.anchorRank);
   for (var seat = 0; seat < hands.length; seat += 1) {
     if (hands[seat].contains(opener)) return seat;
   }
@@ -228,7 +228,7 @@ GameState startRound({
 
   var currentSeed = seed ?? cards.randomSeed();
   final resolvedNow = now ?? DateTime.now().millisecondsSinceEpoch;
-  const maxRedeal = 10;
+  const maxRedeal = 50;
   late List<List<String>> hands;
   for (var attempt = 0; attempt < maxRedeal; attempt += 1) {
     final rng = cards.createRng(currentSeed);
@@ -240,17 +240,14 @@ GameState startRound({
         .map((hand) => cards.sortHand(hand))
         .toList(growable: false);
 
-    // Three-kings reshuffle: if any single player holds 3+ kings and there are
-    // more than 2 seats, redeal with a fresh seed. Skipped for 2-player games
-    // where concentrated kings are more expected.
-    if (seatCount > 2) {
-      final tooManyKings = hands.any(
-        (hand) => hand.where((c) => cards.rankOf(c) == 13).length >= 3,
-      );
-      if (tooManyKings) {
-        currentSeed = (rng() * 0xFFFFFFFF).floor();
-        continue;
-      }
+    // Three-kings reshuffle: if any single player holds 3+ kings, redeal with
+    // a fresh seed. Applies to all player counts.
+    final tooManyKings = hands.any(
+      (hand) => hand.where((c) => cards.rankOf(c) == 13).length >= 3,
+    );
+    if (tooManyKings) {
+      currentSeed = (rng() * 0xFFFFFFFF).floor();
+      continue;
     }
     break;
   }

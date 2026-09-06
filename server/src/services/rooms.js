@@ -35,6 +35,18 @@ const NOTICE_LIMIT = 8;
 const ROUND_BREAK_MS = 6000;
 const BOT_THINK_MS = 1200;
 
+/** Predefined quick-chat messages players can send during a match. */
+const CHAT_MESSAGES = [
+  '👋 Hello!',
+  '👍 Good move!',
+  '😄 Well played!',
+  '⏳ Hurry up!',
+  '😎 Easy!',
+  '😱 Oh no!',
+  '🎉 GG!',
+  '👏 Nice one!',
+];
+
 /** roomId -> room document. Authoritative copy while the process is alive. */
 const cache = new Map();
 const codeIndex = new Map();
@@ -849,6 +861,32 @@ async function settleMatch(room) {
   return room;
 }
 
+/* ------------------------------------------------------------------- chat */
+
+/**
+ * Send a predefined quick-chat message. The message is stored as a notice so
+ * all players see it through normal polling. Rate limited at the route layer.
+ */
+async function sendChat(userId, roomId, messageIndex) {
+  return withLock(roomId, async () => {
+    const room = await requireRoom(roomId);
+    const player = requireMember(room, userId);
+    if (player.isBot) throw apiError('BAD_REQUEST', 'Bots cannot chat.');
+    const text = CHAT_MESSAGES[messageIndex];
+    if (!text) throw apiError('BAD_REQUEST', 'Invalid message index.');
+    pushNotice(room, {
+      kind: 'chat',
+      fromUserId: userId,
+      fromName: player.name,
+      fromSeat: player.seatIndex,
+      seatIndex: player.seatIndex,
+      messageIndex,
+      text: `${player.name}: ${text}`,
+    });
+    return commit(room);
+  });
+}
+
 /* ------------------------------------------------------------------- views */
 
 function roomView(room, userId, now = Date.now()) {
@@ -966,5 +1004,7 @@ module.exports = {
   liveRoomIds,
   settleMatch,
   maybeAdvanceAutomation,
+  sendChat,
+  CHAT_MESSAGES,
   resetCache,
 };

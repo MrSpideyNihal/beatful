@@ -21,11 +21,11 @@ class RulesScreen extends StatelessWidget {
           'else is ranked by how many cards they still hold. Fewer is better.',
     ),
     _RuleCard(
-      title: 'Starting a suit',
+      title: 'Starting the game',
       body:
-          'Each suit has its own row on the table. The 7 of a suit must be '
-          'played before anything else in that suit. Once the 7 is down, the '
-          'suit is open.',
+          'The round always begins with the 7 of Hearts (7♥). Whoever holds '
+          'it plays first. After the 7 of Hearts is down, any other 7 can open '
+          'its suit and play proceeds normally.',
       example: _SevenExample(),
     ),
     _RuleCard(

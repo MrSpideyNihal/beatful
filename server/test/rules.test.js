@@ -31,11 +31,10 @@ test('card codec round trips every card and rejects junk', () => {
   assert.throws(() => cards.makeCard('H', 0), TypeError);
 });
 
-test('an empty table only accepts sevens', () => {
+test('an empty table only accepts seven of hearts', () => {
   const table = rules.createTable();
   for (const code of cards.buildDeck()) {
-    const { rank } = cards.parseCard(code);
-    assert.equal(rules.isLegalMove(table, code), rank === 7, `${code} on empty table`);
+    assert.equal(rules.isLegalMove(table, code), code === 'H7', `${code} on empty table`);
   }
 });
 
@@ -61,7 +60,7 @@ test('no skipping in either direction', () => {
 });
 
 test('cards already on the table are never legal again', () => {
-  const table = tableFrom({ D: [4, 11] });
+  const table = tableFrom({ H: [7, 7], D: [4, 11] });
   for (let rank = 4; rank <= 11; rank += 1) {
     assert.equal(rules.isLegalMove(table, `D${rank}`), false, `D${rank} is already down`);
   }
@@ -70,7 +69,7 @@ test('cards already on the table are never legal again', () => {
 });
 
 test('both ends close at ace and king and the suit completes', () => {
-  let table = tableFrom({ C: [2, 12] });
+  let table = tableFrom({ H: [7, 7], C: [2, 12] });
   assert.deepEqual(rules.nextNeeded(table, 'C'), { down: 1, up: 13 });
   table = rules.applyMove(table, 'C1');
   table = rules.applyMove(table, 'C13');
@@ -86,10 +85,10 @@ test('both ends close at ace and king and the suit completes', () => {
 
 test('applyMove is pure and rejects illegal cards', () => {
   const table = rules.createTable();
-  const next = rules.applyMove(table, 'S7');
-  assert.deepEqual(table.S, { low: null, high: null }, 'input table untouched');
-  assert.deepEqual(next.S, { low: 7, high: 7 });
-  assert.throws(() => rules.applyMove(table, 'S8'), /illegal move/);
+  const next = rules.applyMove(table, 'H7');
+  assert.deepEqual(table.H, { low: null, high: null }, 'input table untouched');
+  assert.deepEqual(next.H, { low: 7, high: 7 });
+  assert.throws(() => rules.applyMove(table, 'H8'), /illegal move/);
   assert.throws(() => rules.applyMove(table, 'nope'), /illegal move/);
 });
 
@@ -179,9 +178,9 @@ test('ranking is by cards remaining with shared ranks', () => {
   assert.deepEqual(rules.rankSeats([0, 1]), [1, 2]);
 });
 
-test('the seven of diamonds holder opens the round', () => {
+test('the seven of hearts holder opens the round', () => {
   const state = engine.startRound({ seatCount: 4, timerSeconds: 15, seed: 4242 });
-  const seat = state.hands.findIndex((hand) => hand.includes('D7'));
+  const seat = state.hands.findIndex((hand) => hand.includes('H7'));
   assert.equal(state.currentTurnSeat, seat);
   assert.ok(rules.hasLegalMove(state.table, state.hands[state.currentTurnSeat]));
 });
@@ -327,9 +326,9 @@ test('a publicView is a snapshot and does not change when the game moves on', ()
 
   // Win the round outright: one card in hand and an empty table that wants it.
   state.table = rules.createTable();
-  state.hands = [['D7'], ['C9', 'C10']];
+  state.hands = [['H7'], ['C9', 'C10']];
   state.currentTurnSeat = 0;
-  engine.playCard(state, 0, 'D7', 1000);
+  engine.playCard(state, 0, 'H7', 1000);
   assert.equal(state.status, engine.STATUS.ROUND_OVER);
   engine.nextRound(state, 2000);
   // Nothing handed out earlier may be rewritten by later play.

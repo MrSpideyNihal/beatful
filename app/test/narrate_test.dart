@@ -58,29 +58,27 @@ void main() {
 
     test('a card somebody else played', () {
       final state = fixedDeal();
-      engine.playCard(state, 1, 'D7', 2000);
-      final view = engine.publicView(state, 0, 2000);
+      engine.playCard(state, 0, 'H7', 2000);
+      engine.playCard(state, 1, 'D7', 3000);
+      final view = engine.publicView(state, 0, 3000);
       expect(narrate.describeLastAction(view, seats), 'Raj played 7♦');
     });
 
     test('a card you played', () {
       final state = fixedDeal();
-      engine.playCard(state, 1, 'D7', 2000);
-      engine.playCard(state, 2, 'C7', 3000);
-      engine.playCard(state, 3, 'S7', 4000);
-      engine.playCard(state, 0, 'H7', 5000);
-      final view = engine.publicView(state, 0, 5000);
+      engine.playCard(state, 0, 'H7', 2000);
+      final view = engine.publicView(state, 0, 2000);
       expect(narrate.describeLastAction(view, seats), 'You played 7♥');
     });
 
     test('a timed out turn says what was auto-played', () {
       final state = fixedDeal();
-      // Only D7 is legal for seat 1, so the auto-play is deterministic.
+      // Only H7 is legal for seat 0, so the auto-play is deterministic.
       engine.resolveTimeout(state, 1000 + 15000, cards.createRng(7));
       final view = engine.publicView(state, 0, 16000);
       expect(
         narrate.describeLastAction(view, seats),
-        "Raj's turn timed out - auto-played 7♦",
+        "Your turn timed out - auto-played 7♥",
       );
     });
 
@@ -169,11 +167,23 @@ void main() {
   });
 
   group('explainIllegal', () {
-    test('a closed suit asks for the seven', () {
+    test('an unopened table asks for the 7 of hearts', () {
       final table = rules.createTable();
       expect(
         narrate.explainIllegal(table, 'H9'),
-        'Play the 7 of hearts first to open Hearts.',
+        'The game must start with the 7 of Hearts.',
+      );
+      expect(
+        narrate.explainIllegal(table, 'D7'),
+        'The game must start with the 7 of Hearts.',
+      );
+    });
+
+    test('a closed suit asks for its seven once hearts is open', () {
+      final table = rules.applyMove(rules.createTable(), 'H7');
+      expect(
+        narrate.explainIllegal(table, 'D9'),
+        'Play the 7 of diamonds first to open Diamonds.',
       );
     });
 

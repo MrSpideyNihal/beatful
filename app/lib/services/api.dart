@@ -271,6 +271,9 @@ class Api {
   Future<Map<String, Object?>> leaveRoom(String roomId) =>
       _send('POST', '/room/$roomId/leave', body: const {});
 
+  Future<Map<String, Object?>> sendChat(String roomId, int messageIndex) =>
+      _send('POST', '/room/$roomId/chat', body: {'messageIndex': messageIndex});
+
   /* --------------------------------------------------------------- economy */
 
   Future<Map<String, Object?>> shopItems() => _send('GET', '/shop/items');

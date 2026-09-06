@@ -219,4 +219,20 @@ router.post(
   }),
 );
 
+/** Quick chat: send a predefined emoji message to all players. */
+router.post(
+  '/:id/chat',
+  rateLimit({ name: 'room_chat', limit: 20, windowMs: 60_000 }),
+  asyncRoute(async (req, res) => {
+    const roomId = validate.identifier(req.params.id, 'room id');
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const messageIndex = Number(body.messageIndex);
+    if (!Number.isInteger(messageIndex) || messageIndex < 0 || messageIndex > 7) {
+      throw apiError('BAD_REQUEST', 'Invalid chat message index.');
+    }
+    const room = await rooms.sendChat(req.user._id, roomId, messageIndex);
+    res.json({ room: rooms.roomView(room, req.user._id) });
+  }),
+);
+
 module.exports = router;

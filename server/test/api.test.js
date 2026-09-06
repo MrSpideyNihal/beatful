@@ -300,11 +300,11 @@ test('a room that does not exist is a clean 404', async () => {
 
 /* ---------------------------------------------------------------- gameplay */
 
-test('the starting seat holds the seven of diamonds', async () => {
+test('the starting seat holds the seven of hearts', async () => {
   const { host, guest, roomId } = await startedPair();
   const { view } = await onTurn([host, guest], roomId);
-  assert.ok(view.game.yourHand.includes('D7'));
-  assert.ok(view.game.yourLegalMoves.includes('D7'));
+  assert.ok(view.game.yourHand.includes('H7'));
+  assert.ok(view.game.yourLegalMoves.includes('H7'));
 });
 
 test('an illegal card is rejected and the turn does not move', async () => {
@@ -377,12 +377,12 @@ test('a move applies immediately in its own response, no polling needed', async 
   const { client, view } = await onTurn([host, guest], roomId);
   const before = view.version;
 
-  const res = await client.post(`/room/${roomId}/play`, { card: 'D7' });
+  const res = await client.post(`/room/${roomId}/play`, { card: 'H7' });
   assert.equal(res.status, 200);
   const room = res.body.room;
   assert.ok(room.version > before);
-  assert.equal(room.game.table.D.low, 7);
-  assert.equal(room.game.table.D.high, 7);
+  assert.equal(room.game.table.H.low, 7);
+  assert.equal(room.game.table.H.high, 7);
   assert.equal(room.game.yourHand.length, 25);
   assert.notEqual(room.game.currentTurnSeat, view.yourSeat);
   assert.equal(room.game.lastAction.type, 'play');
@@ -463,10 +463,10 @@ test('an expired turn with nothing playable is auto passed', async () => {
   const state = room.gameState;
   const seat = state.currentTurnSeat;
 
-  // Only the diamond seven is down, and this seat holds two cards that touch
+  // Only the heart seven is down, and this seat holds two cards that touch
   // neither end of it, so there is genuinely no legal move.
-  state.table = rules.applyMove(rules.createTable(), 'D7');
-  state.hands[seat] = ['H1', 'S13'];
+  state.table = rules.applyMove(rules.createTable(), 'H7');
+  state.hands[seat] = ['S1', 'S13'];
   const expiredAt = state.turnStartedAt + state.timerSeconds * 1000 + 1;
 
   await rooms.tickRoom(roomId, expiredAt);
@@ -529,14 +529,14 @@ test('a parked poll wakes as soon as the other player moves', async () => {
   const started = Date.now();
   const polling = waiter.get(`/room/${roomId}/state?since=${view.version}`);
   await new Promise((resolve) => setTimeout(resolve, 60));
-  const played = await mover.post(`/room/${roomId}/play`, { card: 'D7' });
+  const played = await mover.post(`/room/${roomId}/play`, { card: 'H7' });
   assert.equal(played.status, 200);
 
   const res = await polling;
   const elapsed = Date.now() - started;
   assert.equal(res.status, 200);
   assert.equal(res.body.changed, true);
-  assert.equal(res.body.room.game.table.D.low, 7);
+  assert.equal(res.body.room.game.table.H.low, 7);
   assert.ok(elapsed < config.pollTimeoutMs, `poll should wake early, took ${elapsed}ms`);
 });
 
@@ -619,6 +619,20 @@ test('a connected seat cannot be handed to a bot', async () => {
 });
 
 /* ------------------------------------------------------------- rate limits */
+
+test('quick chat sends predefined messages to room notices', async () => {
+  const { host, guest, roomId } = await startedPair();
+  const res = await host.post(`/room/${roomId}/chat`, { messageIndex: 1 });
+  assert.equal(res.status, 200);
+  const notices = res.body.room.notices;
+  const chat = notices.find((n) => n.kind === 'chat');
+  assert.ok(chat, 'chat notice should be present');
+  assert.match(chat.text, /Good move!/);
+
+  // Rejects bad indices
+  const bad = await host.post(`/room/${roomId}/chat`, { messageIndex: 99 });
+  assert.equal(bad.status, 400);
+});
 
 test('a hammered endpoint is rate limited with a retry hint', async () => {
   rateLimit.resetAll();

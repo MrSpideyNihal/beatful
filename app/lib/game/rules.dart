@@ -169,6 +169,11 @@ bool needsAnchor(TableState table, String suit) => !table[suit].isOpen;
 /// The single legality check. Every path that plays a card goes through this.
 bool isLegalMove(TableState table, Object? card) {
   if (!cards.isCard(card)) return false;
+  // Satte Pe Satta rule: game can only start by 7 of Hearts (H7).
+  // Until 7 of Hearts is played, no other card is legal.
+  if (!isSuitOpen(table, 'H')) {
+    return card == 'H7';
+  }
   final parsed = cards.parseCard(card as String);
   final pile = table[parsed.suit];
   if (!pile.isOpen) {

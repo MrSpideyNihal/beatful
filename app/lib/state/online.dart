@@ -469,6 +469,15 @@ class OnlineController extends Notifier<OnlineRoom> {
     await _send(() => _api.botTakeover(room.roomId, seatIndex));
   }
 
+  Future<void> sendChat(int messageIndex) async {
+    final room = _room;
+    if (room == null) return;
+    await _send(
+      () => _api.sendChat(room.roomId, messageIndex),
+      onDone: _cues.tap,
+    );
+  }
+
   /// One request that returns a room, with the busy flag and the error wording
   /// handled the same way every time.
   Future<void> _send(
@@ -523,6 +532,7 @@ class OnlineController extends Notifier<OnlineRoom> {
   void _announce(RoomView room) {
     for (final notice in room.notices) {
       if (_seenNotices.add(notice.id) && notice.isAlert) {
+        if (notice.isChat) _cues.tap();
         _nudge(notice.text);
       }
     }

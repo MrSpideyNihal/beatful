@@ -72,6 +72,9 @@ String turnPrompt(PublicView view, List<SeatInfo> seats) {
 /// somebody taps a dimmed card instead of silently ignoring the tap.
 String explainIllegal(rules.TableState table, String card) {
   if (!cards.isCard(card)) return 'That is not a card.';
+  if (!rules.isSuitOpen(table, 'H') && card != 'H7') {
+    return 'The game must start with the 7 of Hearts.';
+  }
   final parsed = cards.parseCard(card);
   final suit = suitTitle(parsed.suit);
   final label = cards.cardLabel(card);

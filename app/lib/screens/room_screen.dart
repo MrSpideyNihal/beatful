@@ -21,6 +21,7 @@ import '../theme.dart';
 import '../widgets/anim.dart';
 import '../widgets/big_button.dart';
 import '../widgets/lobby_panel.dart';
+import '../widgets/quick_chat.dart';
 import '../widgets/screen_header.dart';
 import 'game_screen.dart';
 import 'rules_screen.dart';
@@ -134,6 +135,14 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     subtitle: subtitle,
     onBack: () => _leave(ask: !room.isFinished),
     actions: [
+      HeaderButton(
+        icon: Icons.chat_bubble_outline_rounded,
+        label: 'Chat',
+        onPressed: () => showQuickChatSheet(
+          context,
+          onSelect: (index) => _control.sendChat(index),
+        ),
+      ),
       HeaderButton(
         icon: Icons.help_outline_rounded,
         label: 'How to play',

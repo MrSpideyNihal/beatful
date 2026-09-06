@@ -220,7 +220,10 @@ class RoomNotice {
     'bot_takeover',
     'kicked',
     'settled',
+    'chat',
   }.contains(kind);
+
+  bool get isChat => kind == 'chat';
 }
 
 @immutable

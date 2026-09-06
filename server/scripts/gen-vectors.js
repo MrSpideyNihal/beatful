@@ -110,18 +110,18 @@ function buildDealVectors() {
 
 const TABLE_FIXTURES = [
   { name: 'empty', plays: [] },
-  { name: 'diamond_anchor', plays: ['D7'] },
-  { name: 'diamond_run', plays: ['D7', 'D8', 'D6', 'D9'] },
+  { name: 'diamond_anchor', plays: ['H7', 'D7'] },
+  { name: 'diamond_run', plays: ['H7', 'D7', 'D8', 'D6', 'D9'] },
   { name: 'heart_down_exhausted', plays: ['H7', 'H6', 'H5', 'H4', 'H3', 'H2', 'H1'] },
-  { name: 'spade_up_exhausted', plays: ['S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13'] },
+  { name: 'spade_up_exhausted', plays: ['H7', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13'] },
   {
     name: 'club_complete',
-    plays: ['C7', 'C8', 'C6', 'C9', 'C5', 'C10', 'C4', 'C11', 'C3', 'C12', 'C2', 'C13', 'C1'],
+    plays: ['H7', 'C7', 'C8', 'C6', 'C9', 'C5', 'C10', 'C4', 'C11', 'C3', 'C12', 'C2', 'C13', 'C1'],
   },
   { name: 'all_anchors', plays: ['H7', 'D7', 'C7', 'S7'] },
   {
     name: 'mixed',
-    plays: ['D7', 'D6', 'D8', 'H7', 'H8', 'H9', 'S7', 'S6', 'S5', 'C7', 'C8', 'D5', 'H10'],
+    plays: ['H7', 'D7', 'D6', 'D8', 'H8', 'H9', 'S7', 'S6', 'S5', 'C7', 'C8', 'D5', 'H10'],
   },
 ];
 
