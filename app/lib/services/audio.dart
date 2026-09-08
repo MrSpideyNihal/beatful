@@ -51,6 +51,25 @@ class Audio {
   Future<void> _ensurePool() async {
     if (_pool.isNotEmpty || _broken) return;
     try {
+      try {
+        await AudioPlayer.global.setAudioContext(
+          AudioContext(
+            android: const AudioContextAndroid(
+              isSpeakerphoneOn: true,
+              stayAwake: false,
+              contentType: AndroidContentType.music,
+              usageType: AndroidUsageType.game,
+              audioFocus: AndroidAudioFocus.none,
+            ),
+            iOS: AudioContextIOS(
+              category: AVAudioSessionCategory.playback,
+              options: const {AVAudioSessionOptions.mixWithOthers},
+            ),
+          ),
+        );
+      } catch (e) {
+        debugPrint('audio context setting skipped: $e');
+      }
       for (var i = 0; i < _poolSize; i += 1) {
         final player = AudioPlayer()..setReleaseMode(ReleaseMode.stop);
         await player.setPlayerMode(PlayerMode.lowLatency);
