@@ -874,14 +874,17 @@ async function sendChat(userId, roomId, messageIndex) {
     if (player.isBot) throw apiError('BAD_REQUEST', 'Bots cannot chat.');
     const text = CHAT_MESSAGES[messageIndex];
     if (!text) throw apiError('BAD_REQUEST', 'Invalid message index.');
+    const playerName = player.name.trim().toLowerCase() === 'you'
+      ? `Player ${player.seatIndex + 1}`
+      : player.name;
     pushNotice(room, {
       kind: 'chat',
       fromUserId: userId,
-      fromName: player.name,
+      fromName: playerName,
       fromSeat: player.seatIndex,
       seatIndex: player.seatIndex,
       messageIndex,
-      text: `${player.name}: ${text}`,
+      text: `${playerName}: ${text}`,
     });
     return commit(room);
   });

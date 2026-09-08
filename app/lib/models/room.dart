@@ -178,7 +178,9 @@ class RoomPlayer {
 
   SeatInfo toSeat() => SeatInfo(
     index: seatIndex,
-    name: name,
+    name: (!isYou && (name.trim().isEmpty || name.trim().toLowerCase() == 'you'))
+        ? 'Player ${seatIndex + 1}'
+        : name,
     avatar: avatarId % avatarCount(),
     isBot: isBot,
     isYou: isYou,

@@ -160,7 +160,7 @@ class IdentityController extends Notifier<Identity> {
         guestId: guestId,
         // Only sent as a starting point. The server keeps whatever name the
         // account already has, so a rename is never undone by a relaunch.
-        displayName: profile.loaded ? profile.name : null,
+        displayName: (profile.loaded && profile.hasCustomName) ? profile.name : null,
         avatarId: profile.loaded ? profile.avatar : null,
       );
       final token = response['token'];
@@ -178,8 +178,8 @@ class IdentityController extends Notifier<Identity> {
         account: account,
         guestId: guestId,
       );
-      // First launch adopts the name the server suggested; after that the local
-      // name wins and is pushed up instead.
+      // First launch adopts the name the server suggested if user has not set one;
+      // after that the local custom name wins and is pushed up instead.
       await _reconcileProfile(account, isNew: response['isNewUser'] == true);
     } on ApiFailure catch (failure) {
       state = state.copyWith(
@@ -199,11 +199,13 @@ class IdentityController extends Notifier<Identity> {
 
   Future<void> _reconcileProfile(Account account, {required bool isNew}) async {
     final profile = ref.read(profileProvider);
-    if (isNew && !profile.loaded) {
+    if (!profile.hasCustomName &&
+        account.displayName.isNotEmpty &&
+        account.displayName.toLowerCase() != 'you') {
       await ref.read(profileProvider.notifier).setName(account.displayName);
       return;
     }
-    if (profile.loaded && profile.name != account.displayName) {
+    if (profile.loaded && profile.hasCustomName && profile.name != account.displayName) {
       await pushName(profile.name);
     }
     if (profile.loaded && profile.avatar != account.avatarId) {

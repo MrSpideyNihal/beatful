@@ -16,6 +16,7 @@ import '../theme.dart';
 import '../widgets/anim.dart';
 import '../widgets/avatar_circle.dart';
 import '../widgets/big_button.dart';
+import '../widgets/welcome_name_dialog.dart';
 import 'coins_screen.dart';
 import 'friends_screen.dart';
 import 'rules_screen.dart';
@@ -23,13 +24,38 @@ import 'settings_screen.dart';
 import 'shop_screen.dart';
 import 'solo_setup_screen.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _dialogShown = false;
+
+  void _checkWelcome(Profile profile) {
+    if (_dialogShown || !mounted) return;
+    if (profile.loaded && !profile.hasCustomName) {
+      _dialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          showWelcomeNameDialog(context);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profile = ref.watch(profileProvider);
     final config = ref.watch(soloConfigProvider);
+
+    ref.listen<Profile>(profileProvider, (_, next) {
+      _checkWelcome(next);
+    });
+
+    _checkWelcome(profile);
 
     return Scaffold(
       body: SafeArea(

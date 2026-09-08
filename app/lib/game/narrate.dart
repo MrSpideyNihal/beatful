@@ -13,7 +13,12 @@ import 'rules.dart' as rules;
 String seatName(List<SeatInfo> seats, int? index) {
   if (index == null || index < 0 || index >= seats.length) return 'Someone';
   final seat = seats[index];
-  return seat.isYou ? 'You' : seat.name;
+  if (seat.isYou) return 'You';
+  final raw = seat.name.trim();
+  if (raw.isEmpty || raw.toLowerCase() == 'you') {
+    return 'Player ${seat.index + 1}';
+  }
+  return seat.name;
 }
 
 String _possessive(List<SeatInfo> seats, int? index) {

@@ -13,9 +13,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'support/harness.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 void main() {
   Future<void> pumpApp(WidgetTester tester) async {
     usePhoneSurface(tester);
+    SharedPreferences.setMockInitialValues({
+      'profile.has_custom_name': true,
+      'profile.name': 'You',
+    });
     await tester.pumpWidget(
       ProviderScope(
         overrides: [audioProvider.overrideWithValue(SilentAudio())],
@@ -81,6 +87,30 @@ void main() {
     await tester.tap(find.byTooltip('Back'));
     await settle(tester);
 
+    expect(find.text('Nihal'), findsOneWidget);
+
+    await unmount(tester);
+  });
+
+  testWidgets('first launch shows welcome name dialog and saves chosen name', (tester) async {
+    usePhoneSurface(tester);
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [audioProvider.overrideWithValue(SilentAudio())],
+        child: const BeatfulApp(),
+      ),
+    );
+    await settle(tester);
+
+    expect(find.text('Welcome to Beatful!'), findsOneWidget);
+    expect(find.text("Let's Play"), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Nihal');
+    await tester.tap(find.text("Let's Play"));
+    await settle(tester);
+
+    expect(find.text('Welcome to Beatful!'), findsNothing);
     expect(find.text('Nihal'), findsOneWidget);
 
     await unmount(tester);

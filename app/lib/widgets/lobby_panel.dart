@@ -350,7 +350,11 @@ class _PlayerRow extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      player.name,
+                      (!player.isYou &&
+                              (player.name.trim().isEmpty ||
+                                  player.name.trim().toLowerCase() == 'you'))
+                          ? 'Player ${player.seatIndex + 1}'
+                          : player.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
