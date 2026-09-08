@@ -235,4 +235,15 @@ router.post(
   }),
 );
 
+/** Host starts a rematch in the same room. Resets to lobby with same room code. */
+router.post(
+  '/:id/rematch',
+  rateLimit({ name: 'room_rematch', limit: 20, windowMs: 60_000 }),
+  asyncRoute(async (req, res) => {
+    const roomId = validate.identifier(req.params.id, 'room id');
+    const room = await rooms.rematchRoom(req.user._id, roomId);
+    res.json({ room: rooms.roomView(room, req.user._id) });
+  }),
+);
+
 module.exports = router;

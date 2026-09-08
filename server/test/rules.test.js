@@ -171,11 +171,28 @@ test('a seat dealt zero cards has already won', () => {
   assert.equal(rules.findWinnerSeat(hands), 1);
 });
 
-test('ranking is by cards remaining with shared ranks', () => {
+test('ranking is by penalty score with shared ranks', () => {
   assert.deepEqual(rules.rankSeats([0, 3, 5, 1]), [1, 3, 4, 2]);
   assert.deepEqual(rules.rankSeats([0, 2, 2, 5]), [1, 2, 2, 4]);
   assert.deepEqual(rules.rankSeats([4, 4, 4]), [1, 1, 1]);
   assert.deepEqual(rules.rankSeats([0, 1]), [1, 2]);
+
+  // Pip value scoring: 4 Aces = 4 points, 1 King = 13 points.
+  // King player loses with more points even with fewer cards.
+  const fourAces = ['H1', 'D1', 'C1', 'S1'];
+  const oneKing = ['S13'];
+  const winnerHand = [];
+  assert.equal(rules.handPipScore(winnerHand), 0);
+  assert.equal(rules.handPipScore(fourAces), 4);
+  assert.equal(rules.handPipScore(oneKing), 13);
+  assert.deepEqual(
+    rules.rankSeats([
+      rules.handPipScore(winnerHand),
+      rules.handPipScore(fourAces),
+      rules.handPipScore(oneKing),
+    ]),
+    [1, 2, 3],
+  );
 });
 
 test('the seven of hearts holder opens the round', () => {
@@ -261,8 +278,10 @@ test('emptying a hand ends the round and ranks every seat', () => {
   engine.playCard(state, 0, 'H8');
   assert.equal(state.status, engine.STATUS.FINISHED);
   assert.equal(state.winnerSeat, 0);
-  assert.deepEqual(state.ranks, [1, 3, 2]);
-  assert.deepEqual(state.scores, [1, 3, 2]);
+  // Pip values: seat 0 = 0 pts (winner), seat 1 = 1+2+3 = 6 pts, seat 2 = 13 pts (King).
+  // Seat 1 with 6 pts beats Seat 2 with 13 pts even though Seat 1 had 3 cards and Seat 2 had 1.
+  assert.deepEqual(state.ranks, [1, 2, 3]);
+  assert.deepEqual(state.scores, [0, 6, 13]);
   assert.throws(() => engine.playCard(state, 1, 'S1'), (err) => err.code === 'ROUND_NOT_ACTIVE');
   assert.throws(() => engine.pass(state, 1), (err) => err.code === 'ROUND_NOT_ACTIVE');
 });
@@ -274,21 +293,23 @@ test('multi round matches carry scores and rank by total', () => {
   state.currentTurnSeat = 0;
   engine.playCard(state, 0, 'H8');
   assert.equal(state.status, engine.STATUS.ROUND_OVER);
-  assert.deepEqual(state.scores, [1, 3, 2]);
+  // Round 1: seat 0 = 0 pts, seat 1 = 3 pts (1+2), seat 2 = 13 pts (K)
+  assert.deepEqual(state.scores, [0, 3, 13]);
 
   state = engine.nextRound(state, Date.now(), 22);
   assert.equal(state.round, 2);
-  assert.deepEqual(state.scores, [1, 3, 2], 'scores carry over');
+  assert.deepEqual(state.scores, [0, 3, 13], 'scores carry over');
   state.table = { H: { low: 7, high: 7 }, D: { low: null, high: null }, C: { low: null, high: null }, S: { low: null, high: null } };
   state.hands = [['H10'], ['H8'], ['C13']];
   state.currentTurnSeat = 1;
   engine.playCard(state, 1, 'H8');
   assert.equal(state.status, engine.STATUS.FINISHED);
-  assert.deepEqual(state.scores, [3, 4, 4]);
+  // Round 2: seat 0 = +10, seat 1 = +0, seat 2 = +13 => [10, 3, 26]
+  assert.deepEqual(state.scores, [10, 3, 26]);
   const standings = engine.matchStandings(state);
-  assert.equal(standings[0].rank, 1);
-  assert.equal(standings[1].rank, 2);
-  assert.equal(standings[2].rank, 2);
+  assert.equal(standings[1].rank, 1, 'lowest points (seat 1 with 3 pts) wins the match');
+  assert.equal(standings[0].rank, 2, 'second lowest points (seat 0 with 10 pts)');
+  assert.equal(standings[2].rank, 3, 'highest penalty points (seat 2 with 26 pts) is last');
   assert.throws(() => engine.nextRound(state), (err) => err.code === 'ROUND_NOT_OVER');
 });
 

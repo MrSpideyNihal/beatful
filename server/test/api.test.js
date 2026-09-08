@@ -634,6 +634,35 @@ test('quick chat sends predefined messages to room notices', async () => {
   assert.equal(bad.status, 400);
 });
 
+test('host can start a rematch in the same room once finished', async () => {
+  const { host, guest, roomId } = await startedPair();
+  const forward = await harness.fastForward(roomId);
+  assert.ok(forward.finished);
+
+  // Non-host cannot trigger rematch
+  const guestAttempt = await guest.post(`/room/${roomId}/rematch`);
+  assert.equal(guestAttempt.status, 403);
+  assert.equal(guestAttempt.body.error, 'NOT_HOST');
+
+  // Host triggers rematch
+  const res = await host.post(`/room/${roomId}/rematch`);
+  assert.equal(res.status, 200);
+  const room = res.body.room;
+  assert.equal(room.status, 'lobby');
+  assert.equal(room.game, null);
+  assert.equal(room.roomId, roomId);
+  assert.ok(room.roomCode, 'room code is retained');
+
+  // Notices confirm rematch
+  assert.ok(room.notices.some((n) => n.kind === 'rematch'));
+
+  // Host can start the rematched game again
+  await guest.post(`/room/${roomId}/ready`, { ready: true });
+  const restarted = await host.post(`/room/${roomId}/start`);
+  assert.equal(restarted.status, 200);
+  assert.equal(restarted.body.room.status, 'in_progress');
+});
+
 test('a hammered endpoint is rate limited with a retry hint', async () => {
   rateLimit.resetAll();
   const player = await server.player('Asha');

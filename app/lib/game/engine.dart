@@ -100,18 +100,21 @@ class RoundResult {
     required this.round,
     required this.winnerSeat,
     required this.ranks,
+    this.handScores = const [],
     required this.cardsRemaining,
   });
 
   final int round;
   final int winnerSeat;
   final List<int> ranks;
+  final List<int> handScores;
   final List<int> cardsRemaining;
 
   factory RoundResult.fromJson(Map<String, Object?> json) => RoundResult(
     round: (json['round'] as num?)?.toInt() ?? 1,
     winnerSeat: (json['winnerSeat'] as num?)?.toInt() ?? 0,
     ranks: _intList(json['ranks']) ?? const [],
+    handScores: _intList(json['handScores']) ?? const [],
     cardsRemaining: _intList(json['cardsRemaining']) ?? const [],
   );
 
@@ -119,6 +122,7 @@ class RoundResult {
     'round': round,
     'winnerSeat': winnerSeat,
     'ranks': ranks,
+    'handScores': handScores,
     'cardsRemaining': cardsRemaining,
   };
 }
@@ -327,7 +331,10 @@ void _advanceTurn(GameState state, int now) {
 
 void _finishRound(GameState state, int winnerSeat, int now) {
   final sizes = handSizes(state);
-  final ranks = rules.rankSeats(sizes);
+  final handScores = [
+    for (final hand in state.hands) rules.handPipScore(hand),
+  ];
+  final ranks = rules.rankSeats(handScores);
   state.winnerSeat = winnerSeat;
   state.ranks = ranks;
   state.roundResults.add(
@@ -335,12 +342,13 @@ void _finishRound(GameState state, int winnerSeat, int now) {
       round: state.round,
       winnerSeat: winnerSeat,
       ranks: ranks,
+      handScores: handScores,
       cardsRemaining: sizes,
     ),
   );
   for (var seat = 0; seat < state.seatCount; seat += 1) {
-    // Lower total is better: a win adds 1, last place adds seatCount.
-    state.scores[seat] += ranks[seat];
+    // Lower total score is better: a win adds 0, others add their cards' pip values.
+    state.scores[seat] += handScores[seat];
   }
   state.status = state.round >= state.rounds
       ? GameStatus.finished

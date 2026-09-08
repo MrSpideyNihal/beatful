@@ -289,11 +289,16 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     return Column(mainAxisSize: MainAxisSize.min, children: parts);
   }
 
-  /// Between rounds the server deals again on its own, so the panel says so
-  /// instead of showing a button that would only race it.
+  /// Between rounds the server deals again on its own. After a match, non-hosts
+  /// wait for the host to start a rematch in the same room.
   String? _waitingFor(RoomView room, PublicView game) {
-    if (game.status != GameStatus.roundOver) return null;
-    return 'The next round deals in a moment.';
+    if (game.status == GameStatus.roundOver) {
+      return 'The next round deals in a moment.';
+    }
+    if (room.isFinished && !room.isHost) {
+      return 'Waiting for host to rematch...';
+    }
+    return null;
   }
 
   Widget? _footer(RoomView room, PublicView game) {
@@ -310,7 +315,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     if (room.isHost) {
       lines.add(
         const Text(
-          'Play again makes a new room with these settings. Share the new code.',
+          'Play again keeps the same room code so everyone stays together.',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 14,
@@ -323,7 +328,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     } else {
       lines.add(
         const Text(
-          'A finished room cannot be replayed. Ask the host for a new code.',
+          'Waiting for the host to rematch with this same code.',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 14,

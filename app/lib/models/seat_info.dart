@@ -41,17 +41,16 @@ class SeatInfo {
   bool get isSelf => isYou;
 }
 
-/// Names for bot seats. Short, easy to read at a glance, and stable per seat so a
-/// player can learn who is who during a match.
+/// Generic names for bot seats. Short, clear, and easy to read at a glance.
 const List<String> botRoster = [
-  'Raj',
-  'Akshay',
-  'Piya',
-  'Kusum',
-  'Arvind',
-  'Kiran',
-  'Shobha',
-  'Prakash',
+  'Bot 1',
+  'Bot 2',
+  'Bot 3',
+  'Bot 4',
+  'Bot 5',
+  'Bot 6',
+  'Bot 7',
+  'Bot 8',
 ];
 
 String botName(int slot) => botRoster[slot.abs() % botRoster.length];

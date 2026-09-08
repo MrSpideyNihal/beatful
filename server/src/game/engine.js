@@ -156,18 +156,20 @@ function advanceTurn(state, now) {
 
 function finishRound(state, winnerSeat, now) {
   const sizes = handSizes(state);
-  const ranks = rules.rankSeats(sizes);
+  const handScores = state.hands.map((hand) => rules.handPipScore(hand));
+  const ranks = rules.rankSeats(handScores);
   state.winnerSeat = winnerSeat;
   state.ranks = ranks;
   state.roundResults.push({
     round: state.round,
     winnerSeat,
     ranks,
+    handScores,
     cardsRemaining: sizes,
   });
   for (let seat = 0; seat < state.seatCount; seat += 1) {
-    // Lower total is better. A win adds 1, last place adds seatCount.
-    state.scores[seat] += ranks[seat];
+    // Lower total score is better. Winner scores 0; others add their cards' pip values.
+    state.scores[seat] += handScores[seat];
   }
   state.status = state.round >= state.rounds ? STATUS.FINISHED : STATUS.ROUND_OVER;
   pushLog(state, { type: 'round_over', at: now, round: state.round, winnerSeat, ranks });
@@ -358,6 +360,7 @@ function publicView(state, seatIndex, now = Date.now()) {
     roundResults: state.roundResults.map((entry) => ({
       ...entry,
       ranks: entry.ranks.slice(),
+      handScores: entry.handScores ? entry.handScores.slice() : [],
       cardsRemaining: entry.cardsRemaining.slice(),
     })),
     winnerSeat: state.winnerSeat,

@@ -977,6 +977,38 @@ async function findRoomByCode(code) {
   return loadRoomByCode(code);
 }
 
+async function rematchRoom(userId, roomId) {
+  return withLock(roomId, async () => {
+    const room = await requireRoom(roomId);
+    requireHost(room, userId);
+    if (room.status !== 'finished') {
+      throw apiError('ROOM_STARTED', 'Room must be finished to start a rematch.');
+    }
+
+    room.status = 'lobby';
+    room.gameState = null;
+    room.result = null;
+    room.settled = false;
+    room.finishedAt = null;
+    room.locked = false;
+
+    for (const player of room.players) {
+      player.ready = player.userId === room.hostUserId || Boolean(player.isBot);
+      player.stake = 0;
+    }
+
+    pushNotice(room, {
+      kind: 'rematch',
+      text: 'Rematch started! Ready up to play again.',
+    });
+
+    await commit(room);
+    watch.notify(room._id);
+    log.info('room rematch', { roomId: room._id, roomCode: room.roomCode });
+    return room;
+  });
+}
+
 /** Test helper. Drops every cached room without touching the store. */
 function resetCache() {
   cache.clear();
@@ -996,6 +1028,7 @@ module.exports = {
   addBot,
   replaceSeatWithBot,
   startGame,
+  rematchRoom,
   playCard,
   passTurn,
   pollState,

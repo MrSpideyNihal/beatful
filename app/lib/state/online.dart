@@ -170,28 +170,17 @@ class OnlineController extends Notifier<OnlineRoom> {
     }
   }
 
-  /// Another match with the same people and the same settings.
-  ///
-  /// A finished room cannot be restarted, so this makes a new one and follows it
-  /// instead. The new room is created before the old one is left, so a failure
-  /// leaves the host exactly where they were.
+  /// Starts a rematch in the same room with the same players and same room code.
   Future<bool> playAgain() async {
     final old = _room;
     if (old == null || state.busy) return false;
     state = state.copyWith(busy: true, clearNotice: true);
     try {
-      final fresh = _roomFrom(await _api.createRoom(old.settings.toJson()));
-      if (fresh == null) {
-        throw const ApiFailure('SERVER_ERROR', 'The room came back empty.');
+      final updated = _roomFrom(await _api.rematch(old.roomId));
+      if (updated != null) {
+        _cuedResult = false;
+        state = state.copyWith(room: updated, busy: false);
       }
-      _stopEverything();
-      try {
-        await _api.leaveRoom(old.roomId);
-      } on ApiFailure catch (failure) {
-        // The finished room expires on its own, so this is not worth reporting.
-        debugPrint('old room not released: ${failure.code}');
-      }
-      enter(fresh);
       return true;
     } on ApiFailure catch (failure) {
       state = state.copyWith(

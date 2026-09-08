@@ -222,23 +222,32 @@ function dealHands(deck, playerCount) {
 }
 
 /**
- * Ranking at round end. Fewer cards remaining is a better rank. Seats with the
- * same card count share a rank, and the next distinct count skips ahead
- * (standard competition ranking: 1, 2, 2, 4).
+ * Total pip value of cards in a hand. Ace=1, 2-10=value, Jack=11, Queen=12, King=13.
+ * Empty hand (round winner) scores 0 penalty points.
  */
-function rankSeats(handSizes) {
-  const entries = handSizes.map((cardsRemaining, seatIndex) => ({ seatIndex, cardsRemaining }));
+function handPipScore(hand) {
+  if (!Array.isArray(hand) || hand.length === 0) return 0;
+  return hand.reduce((sum, card) => sum + parseCard(card).rank, 0);
+}
+
+/**
+ * Ranking at round end. Fewer penalty points (card pip value sum) is a better
+ * rank. Seats with the same score share a rank, and the next distinct score skips
+ * ahead (standard competition ranking: 1, 2, 2, 4).
+ */
+function rankSeats(scores) {
+  const entries = scores.map((score, seatIndex) => ({ seatIndex, score }));
   const sorted = entries.slice().sort((a, b) => {
-    if (a.cardsRemaining !== b.cardsRemaining) return a.cardsRemaining - b.cardsRemaining;
+    if (a.score !== b.score) return a.score - b.score;
     return a.seatIndex - b.seatIndex;
   });
-  const ranks = new Array(handSizes.length).fill(0);
+  const ranks = new Array(scores.length).fill(0);
   let currentRank = 0;
-  let previousCount = null;
+  let previousScore = null;
   sorted.forEach((entry, index) => {
-    if (previousCount === null || entry.cardsRemaining !== previousCount) {
+    if (previousScore === null || entry.score !== previousScore) {
       currentRank = index + 1;
-      previousCount = entry.cardsRemaining;
+      previousScore = entry.score;
     }
     ranks[entry.seatIndex] = currentRank;
   });
@@ -287,6 +296,7 @@ module.exports = {
   moveDirection,
   dealCounts,
   dealHands,
+  handPipScore,
   rankSeats,
   findWinnerSeat,
   isDeadlocked,

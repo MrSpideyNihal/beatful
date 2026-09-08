@@ -264,22 +264,33 @@ List<List<String>> dealHands(List<String> deck, int playerCount) {
   return hands;
 }
 
-/// Fewer cards remaining is a better rank. Equal counts share a rank and the
-/// next distinct count skips ahead, so 1, 2, 2, 4.
-List<int> rankSeats(List<int> handSizes) {
-  final order = [for (var seat = 0; seat < handSizes.length; seat += 1) seat];
+/// Total pip value of cards in a hand. Ace=1, 2-10=value, Jack=11, Queen=12, King=13.
+/// Empty hand (round winner) scores 0 penalty points.
+int handPipScore(List<String> hand) {
+  var total = 0;
+  for (final card in hand) {
+    total += cards.parseCard(card).rank;
+  }
+  return total;
+}
+
+/// Fewer penalty points (card pip value sum) is a better rank. Equal scores share
+/// a rank and the next distinct score skips ahead (standard competition ranking:
+/// 1, 2, 2, 4).
+List<int> rankSeats(List<int> scores) {
+  final order = [for (var seat = 0; seat < scores.length; seat += 1) seat];
   order.sort((a, b) {
-    if (handSizes[a] != handSizes[b]) return handSizes[a] - handSizes[b];
+    if (scores[a] != scores[b]) return scores[a] - scores[b];
     return a - b;
   });
-  final ranks = List<int>.filled(handSizes.length, 0);
+  final ranks = List<int>.filled(scores.length, 0);
   var currentRank = 0;
-  int? previousCount;
+  int? previousScore;
   for (var index = 0; index < order.length; index += 1) {
     final seat = order[index];
-    if (previousCount == null || handSizes[seat] != previousCount) {
+    if (previousScore == null || scores[seat] != previousScore) {
       currentRank = index + 1;
-      previousCount = handSizes[seat];
+      previousScore = scores[seat];
     }
     ranks[seat] = currentRank;
   }

@@ -318,6 +318,8 @@ class _RoundOverPanelState extends ConsumerState<RoundOverPanel> {
     }
 
     final ranks = widget.view.ranks ?? const <int>[];
+    final roundResults = widget.view.roundResults;
+    final lastRound = roundResults.isNotEmpty ? roundResults.last : null;
     final order = [for (var seat = 0; seat < widget.seats.length; seat += 1) seat]
       ..sort((a, b) {
         final left = a < ranks.length ? ranks[a] : 99;
@@ -331,17 +333,26 @@ class _RoundOverPanelState extends ConsumerState<RoundOverPanel> {
           child: _ResultRow(
             seat: _seatOf(seat),
             place: seat < ranks.length ? ranks[seat] : 0,
-            detail: _cardsLeft(seat),
+            detail: _roundDetail(
+              seat,
+              lastRound != null && seat < lastRound.handScores.length
+                  ? lastRound.handScores[seat]
+                  : null,
+            ),
             you: seat == widget.view.yourSeat,
           ),
         ),
     ];
   }
 
-  String _cardsLeft(int seat) {
+  String _roundDetail(int seat, int? score) {
     final left = seat < widget.view.handCounts.length ? widget.view.handCounts[seat] : 0;
-    if (left == 0) return 'Out of cards';
-    return '$left card${left == 1 ? '' : 's'} left';
+    if (score == null) {
+      if (left == 0) return 'Out of cards';
+      return '$left card${left == 1 ? '' : 's'} left';
+    }
+    if (left == 0) return 'Out of cards (0 pts)';
+    return '$left card${left == 1 ? '' : 's'} left (+$score pts)';
   }
 
   SeatInfo _seatOf(int index) => index >= 0 && index < widget.seats.length
