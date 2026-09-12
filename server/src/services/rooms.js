@@ -226,6 +226,7 @@ async function joinRoom(user, code) {
     if (existing) {
       // Rejoining an in progress game is just a presence refresh.
       existing.connected = true;
+      existing.isBot = false;
       existing.lastSeenAt = Date.now();
       existing.name = user.displayName;
       existing.avatarId = user.avatarId ?? 0;
@@ -530,6 +531,9 @@ async function playCard(userId, roomId, card) {
     const state = requireActiveGame(room);
     player.connected = true;
     player.lastSeenAt = Date.now();
+    if (player.isBot && !player.userId.startsWith('bot-')) {
+      player.isBot = false;
+    }
     if (player.isBot) throw apiError('FORBIDDEN', 'That seat is played by a bot.');
 
     // The engine re-checks turn order, ownership and legality. Nothing the
@@ -547,6 +551,9 @@ async function passTurn(userId, roomId) {
     const state = requireActiveGame(room);
     player.connected = true;
     player.lastSeenAt = Date.now();
+    if (player.isBot && !player.userId.startsWith('bot-')) {
+      player.isBot = false;
+    }
     if (player.isBot) throw apiError('FORBIDDEN', 'That seat is played by a bot.');
 
     const entry = engine.pass(state, player.seatIndex, Date.now());
@@ -881,7 +888,13 @@ async function sendChat(userId, roomId, payload) {
   return withLock(roomId, async () => {
     const room = await requireRoom(roomId);
     const player = requireMember(room, userId);
-    if (player.isBot) throw apiError('BAD_REQUEST', 'Bots cannot chat.');
+    if (player.isBot && !player.userId.startsWith('bot-')) {
+      player.isBot = false;
+      player.connected = true;
+      if (player.name.endsWith(' (bot)')) {
+        player.name = player.name.replace(/\s*\(bot\)$/, '');
+      }
+    }
 
     let text;
     if (customText) {
@@ -895,9 +908,10 @@ async function sendChat(userId, roomId, payload) {
       throw apiError('BAD_REQUEST', 'No chat message provided.');
     }
 
-    const playerName = player.name.trim().toLowerCase() === 'you'
+    let rawName = player.name.replace(/\s*\(bot\)$/, '').trim();
+    const playerName = rawName.toLowerCase() === 'you'
       ? `Player ${player.seatIndex + 1}`
-      : player.name;
+      : rawName;
     pushNotice(room, {
       kind: 'chat',
       fromUserId: userId,
