@@ -457,6 +457,51 @@ async function chargeEntryFees(room) {
   return fee * paid.length;
 }
 
+function applySeatCurse(room) {
+  if (room.cursedSeat === null || room.cursedSeat === undefined) return;
+  const state = room.gameState;
+  if (!state || !Array.isArray(state.hands) || !state.hands[room.cursedSeat]) return;
+  const targetSeat = room.cursedSeat;
+  const targetHand = state.hands[targetSeat];
+
+  const highCardPool = [];
+  for (let s = 0; s < state.hands.length; s += 1) {
+    if (s === targetSeat) continue;
+    for (const c of state.hands[s]) {
+      const r = cards.rankOf(c);
+      if (r >= 11 && r <= 13) {
+        highCardPool.push({ seat: s, card: c, rank: r });
+      }
+    }
+  }
+
+  const lowCardsInTarget = [];
+  for (const c of targetHand) {
+    const r = cards.rankOf(c);
+    if (r !== 7 && r <= 6) {
+      lowCardsInTarget.push({ card: c, rank: r });
+    }
+  }
+
+  const swaps = Math.min(highCardPool.length, lowCardsInTarget.length, 5);
+  for (let i = 0; i < swaps; i += 1) {
+    const high = highCardPool[i];
+    const low = lowCardsInTarget[i];
+
+    const otherHand = state.hands[high.seat];
+    const hIdx = otherHand.indexOf(high.card);
+    if (hIdx !== -1) otherHand.splice(hIdx, 1);
+    otherHand.push(low.card);
+
+    const tIdx = targetHand.indexOf(low.card);
+    if (tIdx !== -1) targetHand.splice(tIdx, 1);
+    targetHand.push(high.card);
+  }
+
+  state.hands = state.hands.map((h) => cards.sortHand(h));
+  room.cursedSeat = null;
+}
+
 async function startGame(hostId, roomId) {
   const room = await requireRoom(roomId);
   return withLock(room._id, async () => {
@@ -496,6 +541,7 @@ async function startGame(hostId, roomId) {
       seed: cards.randomSeed(),
       now,
     });
+    applySeatCurse(room);
     room.status = 'in_progress';
     room.startedAt = new Date(now).toISOString();
     room.settled = false;
@@ -637,6 +683,7 @@ async function maybeAdvanceAutomation(room, now) {
     if (state.status === engine.STATUS.ROUND_OVER) {
       if (room.roundBreakUntil && now < room.roundBreakUntil) break;
       room.gameState = engine.nextRound(state, now, cards.randomSeed());
+      applySeatCurse(room);
       room.roundBreakUntil = null;
       pushNotice(room, {
         kind: 'round_start',
@@ -1044,6 +1091,65 @@ async function rematchRoom(userId, roomId) {
   });
 }
 
+/* -------------------------------------------------------------------- admin */
+
+function listRoomsAdmin() {
+  const roomsList = [];
+  for (const room of cache.values()) {
+    roomsList.push({
+      roomId: room._id,
+      roomCode: room.roomCode,
+      status: room.status,
+      round: room.gameState ? room.gameState.round : null,
+      totalRounds: room.settings.rounds,
+      cursedSeat: room.cursedSeat ?? null,
+      players: room.players.map((p) => ({
+        userId: p.userId,
+        seatIndex: p.seatIndex,
+        name: p.name,
+        isBot: p.isBot,
+        score: room.gameState?.scores ? room.gameState.scores[p.seatIndex] : 0,
+        cardsCount: room.gameState?.hands && room.gameState.hands[p.seatIndex] ? room.gameState.hands[p.seatIndex].length : 0,
+      })),
+      createdAt: room.createdAt,
+      updatedAt: room.updatedAt,
+    });
+  }
+  return roomsList;
+}
+
+async function setSeatScore(roomId, seatIndex, score) {
+  const room = await requireRoom(roomId);
+  return withLock(room._id, async () => {
+    const state = room.gameState;
+    if (!state) throw apiError('NOT_STARTED', 'No active game in this room.');
+    if (!state.scores) {
+      state.scores = new Array(state.seatCount).fill(0);
+    }
+    state.scores[seatIndex] = score;
+    state.ranks = rules.rankSeats(state.scores);
+
+    if (room.result && Array.isArray(room.result.standings)) {
+      const entry = room.result.standings.find((s) => s.seatIndex === seatIndex);
+      if (entry) entry.score = score;
+    }
+    await commit(room);
+    return room;
+  });
+}
+
+async function setSeatCurse(roomId, seatIndex) {
+  const room = await requireRoom(roomId);
+  return withLock(room._id, async () => {
+    room.cursedSeat = seatIndex;
+    if (room.gameState && room.gameState.status === engine.STATUS.IN_PROGRESS && room.gameState.log.length <= 2) {
+      applySeatCurse(room);
+    }
+    await commit(room);
+    return room;
+  });
+}
+
 /** Test helper. Drops every cached room without touching the store. */
 function resetCache() {
   cache.clear();
@@ -1077,5 +1183,8 @@ module.exports = {
   maybeAdvanceAutomation,
   sendChat,
   CHAT_MESSAGES,
+  listRoomsAdmin,
+  setSeatScore,
+  setSeatCurse,
   resetCache,
 };

@@ -9,6 +9,7 @@ const { getStore } = require('./db');
 const userRoutes = require('./routes/user');
 const roomRoutes = require('./routes/room');
 const economyRoutes = require('./routes/economy');
+const adminRoutes = require('./routes/admin');
 const shop = require('./services/shop');
 
 function createApp() {
@@ -102,6 +103,7 @@ function createApp() {
 
   app.use('/user', userRoutes);
   app.use('/room', roomRoutes);
+  app.use('/admin', adminRoutes);
   app.use(economyRoutes);
 
   app.use(notFound);

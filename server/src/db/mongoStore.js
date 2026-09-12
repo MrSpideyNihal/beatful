@@ -96,6 +96,21 @@ function createMongoStore(uri = config.mongoUri, dbName = config.mongoDbName) {
         return collections().users.findOne({ _id: userId });
       },
 
+      async listUsers({ query, limit = 50 } = {}) {
+        const c = collections();
+        let filter = {};
+        if (query) {
+          const regex = new RegExp(String(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          filter = {
+            $or: [
+              { _id: query },
+              { displayName: { $regex: regex } }
+            ]
+          };
+        }
+        return c.users.find(filter).sort({ createdAt: -1 }).limit(limit).toArray();
+      },
+
       async setProfile(userId, patch) {
         const set = {};
         if (patch.displayName !== undefined) set.displayName = patch.displayName;

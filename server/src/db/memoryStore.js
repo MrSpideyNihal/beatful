@@ -60,6 +60,15 @@ function createMemoryStore() {
         return clone(users.get(userId));
       },
 
+      async listUsers({ query, limit = 50 } = {}) {
+        let list = Array.from(users.values());
+        if (query) {
+          const q = String(query).toLowerCase();
+          list = list.filter((u) => u._id.toLowerCase().includes(q) || (u.displayName && u.displayName.toLowerCase().includes(q)));
+        }
+        return list.slice(0, limit).map((u) => clone(u));
+      },
+
       async setProfile(userId, patch) {
         const user = users.get(userId);
         if (!user) return null;

@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beatful Master Console - System Administration</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="/assets/images/logo.png">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    /* ---------------- Custom Admin Console Styles ---------------- */
+    :root {
+      --admin-bg: #07090e;
+      --admin-card: rgba(18, 22, 32, 0.85);
+      --admin-border: rgba(255, 184, 0, 0.2);
+      --admin-border-subtle: rgba(255, 255, 255, 0.08);
+      --admin-accent: #FFB800;
+      --admin-danger: #FF4757;
+      --admin-success: #2ED573;
+      --admin-purple: #9b59b6;
+    }
+
+    body {
+      background-color: var(--admin-bg);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(255, 184, 0, 0.04) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(155, 89, 182, 0.04) 0%, transparent 40%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .admin-nav {
+      background: rgba(11, 14, 20, 0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--admin-border-subtle);
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .admin-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .admin-brand img {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+    }
+
+    .admin-badge {
+      background: linear-gradient(135deg, rgba(255,184,0,0.2), rgba(230,81,0,0.2));
+      border: 1px solid rgba(255,184,0,0.4);
+      color: #FFB800;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .admin-server-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.04);
+      padding: 6px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--admin-border-subtle);
+      font-size: 12px;
+    }
+
+    .server-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--admin-success);
+      box-shadow: 0 0 10px var(--admin-success);
+    }
+
+    .server-status-dot.offline {
+      background-color: var(--admin-danger);
+      box-shadow: 0 0 10px var(--admin-danger);
+    }
+
+    .admin-container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Auth card */
+    .auth-overlay {
+      max-width: 440px;
+      margin: 60px auto 0;
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), var(--gold-glow);
+      text-align: center;
+    }
+
+    .auth-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .auth-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(8, 10, 15, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 14px;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--admin-accent);
+      box-shadow: 0 0 0 2px rgba(255, 184, 0, 0.2);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      background: var(--gold-gradient);
+      color: #000;
+      font-weight: 700;
+      font-size: 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--gold-glow);
+    }
+
+    /* Dashboard Layout */
+    .dashboard-view {
+      display: none;
+    }
+
+    .dashboard-view.active {
+      display: block;
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 12px;
+      border-bottom: 1px solid var(--admin-border-subtle);
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--admin-border-subtle);
+      color: var(--text-muted);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(255,184,0,0.2), rgba(230,81,0,0.15));
+      border-color: var(--admin-accent);
+      color: var(--admin-accent);
+    }
+
+    /* Cards & Panels */
+    .admin-card {
+      background: var(--admin-card);
+      border: 1px solid var(--admin-border-subtle);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Tables */
+    .admin-table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--admin-border-subtle);
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .admin-table th {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 12px 16px;
+      color: var(--text-dim);
+      font-weight: 600;
+      border-bottom: 1px solid var(--admin-border-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .admin-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+    }
+
+    .admin-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Action Buttons */
+    .action-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .action-btn.btn-best {
+      background: rgba(46, 213, 115, 0.15);
+      border-color: rgba(46, 213, 115, 0.4);
+      color: #2ED573;
+    }
+
+    .action-btn.btn-best:hover {
+      background: rgba(46, 213, 115, 0.3);
+    }
+
+    .action-btn.btn-worst {
+      background: rgba(255, 71, 87, 0.15);
+      border-color: rgba(255, 71, 87, 0.4);
+      color: #FF4757;
+    }
+
+    .action-btn.btn-worst:hover {
+      background: rgba(255, 71, 87, 0.3);
+    }
+
+    .action-btn.btn-curse {
+      background: rgba(155, 89, 182, 0.2);
+      border-color: rgba(155, 89, 182, 0.5);
+      color: #d7b5f2;
+    }
+
+    .action-btn.btn-curse:hover {
+      background: rgba(155, 89, 182, 0.35);
+    }
+
+    .action-btn.btn-gift {
+      background: rgba(255, 184, 0, 0.15);
+      border-color: rgba(255, 184, 0, 0.4);
+      color: #FFB800;
+    }
+
+    .action-btn.btn-gift:hover {
+      background: rgba(255, 184, 0, 0.3);
+    }
+
+    /* Seat Card Layout */
+    .seats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .seat-box {
+      background: rgba(10, 13, 19, 0.8);
+      border: 1px solid var(--admin-border-subtle);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+    }
+
+    .seat-box.cursed {
+      border-color: var(--admin-purple);
+      background: rgba(35, 20, 50, 0.4);
+    }
+
+    .seat-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .seat-name {
+      font-weight: 700;
+      color: #fff;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .seat-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .score-badge {
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .score-badge.low {
+      color: var(--admin-success);
+    }
+
+    .score-badge.high {
+      color: var(--admin-danger);
+    }
+
+    .seat-actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1000;
+    }
+
+    .toast {
+      background: rgba(18, 22, 32, 0.95);
+      border: 1px solid var(--admin-border);
+      backdrop-filter: blur(12px);
+      padding: 12px 18px;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.3s ease forwards;
+    }
+
+    .toast.success i { color: var(--admin-success); }
+    .toast.error i { color: var(--admin-danger); }
+    .toast.warning i { color: var(--admin-accent); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .stealth-banner {
+      background: rgba(255, 184, 0, 0.05);
+      border: 1px dashed rgba(255, 184, 0, 0.25);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: #e2c070;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header class="admin-nav">
+    <a href="/" class="admin-brand">
+      <img src="/assets/images/logo.png" alt="Beatful Logo">
+      <span class="nav-brand-title" style="font-size: 18px; font-weight: 800;">Beatful</span>
+      <span class="admin-badge">Admin Console</span>
+    </a>
+
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div class="admin-server-selector">
+        <span class="server-status-dot" id="serverDot"></span>
+        <span id="serverLabel">API: Connecting...</span>
+        <button class="action-btn" id="btnServerConfig" style="padding: 2px 6px; font-size: 10px;" title="Switch backend endpoint">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+
+      <div id="adminUserBadge" style="display: none; align-items: center; gap: 10px;">
+        <span style="font-size: 13px; color: #fff; font-weight: 600;"><i class="fa-solid fa-user-shield" style="color: var(--admin-accent);"></i> <span id="adminUsername">nihaldev</span></span>
+        <button class="action-btn btn-worst" id="btnLogout" style="padding: 5px 10px;">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="admin-container">
+
+    <!-- Login Box -->
+    <div class="auth-overlay" id="loginCard">
+      <div style="width: 56px; height: 56px; border-radius: 16px; background: rgba(255, 184, 0, 0.1); border: 1px solid var(--admin-border); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--admin-accent);">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h2 class="auth-title">Developer Access</h2>
+      <p class="auth-desc">Authenticate to access player balances, room parameters, score overrides, and match operations.</p>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="usernameInput">Admin ID</label>
+          <input type="text" id="usernameInput" class="form-input" value="nihaldev" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="passwordInput">Secret Key / Password</label>
+          <input type="password" id="passwordInput" class="form-input" value="nihalisgret9322161961" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-submit" id="btnLogin">
+          <i class="fa-solid fa-shield-halved"></i> Access Master Console
+        </button>
+      </form>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-view" id="dashboardView">
+
+      <!-- Navigation Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="matches">
+          <i class="fa-solid fa-gamepad"></i> Live Matches & Stealth Score Alter
+        </button>
+        <button class="tab-btn" data-tab="players">
+          <i class="fa-solid fa-coins"></i> Player Vault & Coins
+        </button>
+        <button class="tab-btn" data-tab="broadcast">
+          <i class="fa-solid fa-bullhorn"></i> Room Announce
+        </button>
+      </div>
+
+      <!-- Stealth abuse tip -->
+      <div class="stealth-banner">
+        <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 18px; color: var(--admin-accent);"></i>
+        <div>
+          <strong>Developer Stealth Control:</strong> Points alterations seamlessly update cumulative round penalties in memory and sync on the next client turn or pass. Curse injects face cards (Jacks, Queens, Kings) directly on the subsequent deal.
+        </div>
+      </div>
+
+      <!-- Tab 1: Live Matches -->
+      <div class="tab-content active" id="tabMatches">
+        <div class="admin-card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fa-solid fa-satellite-dish" style="color: var(--admin-accent);"></i> Active Game Tables
+              <span id="roomCountBadge" class="admin-badge" style="font-size: 10px;">0 Rooms</span>
+            </h3>
+            <div class="card-actions">
+              <label style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                <input type="checkbox" id="autoRefreshRooms" checked> Auto-refresh (3s)
+              </label>
+              <button class="action-btn" id="btnRefreshRooms">
+                <i class="fa-solid fa-rotate"></i> Refresh
+              </button>
+            </div>
+          </div>
+
+          <div id="roomsContainer">
+            <p style="color: var(--text-dim); text-align: center; padding: 40px 0;">No active rooms found. Start a game from the app to see and control it here!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Players & Coins -->
+      <div class="tab-content" id="tabPlayers" style="display: none;">
+        <div class="admin-card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fa-solid fa-users" style="color: var(--admin-accent);"></i> Player Vault & Balance Grants
+            </h3>
+            <div class="card-actions">
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="playerSearchInput" class="form-input" placeholder="Search by name or ID..." style="width: 240px; padding: 8px 12px; font-size: 12px;">
+                <button class="action-btn" id="btnSearchPlayers">
+                  <i class="fa-solid fa-magnifying-glass"></i> Search
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>User ID</th>
+                  <th>Coins</th>
+                  <th>Stats (Wins / Matches)</th>
+                  <th>Created</th>
+                  <th>Coin Actions</th>
+                </tr>
+              </thead>
+              <tbody id="playerTableBody">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading players...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Room Announcement -->
+      <div class="tab-content" id="tabBroadcast" style="display: none;">
+        <div class="admin-card" style="max-width: 600px; margin: 0 auto;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fa-solid fa-bullhorn" style="color: var(--admin-accent);"></i> Send In-Game Announce
+            </h3>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 18px;">
+            Broadcast a custom narrator banner or chat message to an active room.
+          </p>
+
+          <form id="broadcastForm">
+            <div class="form-group">
+              <label class="form-label" for="broadcastRoomId">Target Room ID</label>
+              <input type="text" id="broadcastRoomId" class="form-input" placeholder="e.g. room_12345" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="broadcastMessage">Message Content</label>
+              <input type="text" id="broadcastMessage" class="form-input" placeholder="e.g. Admin: Luck is shifting on table 1..." required>
+            </div>
+            <button type="submit" class="btn-submit">
+              <i class="fa-solid fa-paper-plane"></i> Send Room Announcement
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Custom Server URL Modal -->
+  <div id="serverModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center;">
+    <div style="background: var(--admin-card); border: 1px solid var(--admin-border); border-radius: 16px; padding: 24px; max-width: 400px; width: 90%;">
+      <h3 style="color: #fff; font-size: 16px; font-family: 'Outfit'; margin-bottom: 12px;">Backend API Endpoint</h3>
+      <div class="form-group">
+        <label class="form-label">API URL</label>
+        <input type="text" id="customApiUrl" class="form-input" value="https://beatful-api.onrender.com">
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button class="action-btn" id="btnLocalhostPreset" style="font-size: 11px;">Localhost (3000)</button>
+        <button class="action-btn" id="btnRenderPreset" style="font-size: 11px;">Render (Prod)</button>
+        <button class="btn-submit" id="btnSaveServer" style="width: auto; padding: 8px 16px;">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Admin Application Script -->
+  <script>
+    // --- Config & State ---
+    const defaultApiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000'
+      : 'https://beatful-api.onrender.com';
+
+    let API_BASE = localStorage.getItem('beatful_admin_api') || defaultApiUrl;
+    let ADMIN_TOKEN = localStorage.getItem('beatful_admin_token') || '';
+    let roomsPollTimer = null;
+
+    // Elements
+    const serverDot = document.getElementById('serverDot');
+    const serverLabel = document.getElementById('serverLabel');
+    const loginCard = document.getElementById('loginCard');
+    const dashboardView = document.getElementById('dashboardView');
+    const adminUserBadge = document.getElementById('adminUserBadge');
+    const adminUsername = document.getElementById('adminUsername');
+    const loginForm = document.getElementById('loginForm');
+    const btnLogout = document.getElementById('btnLogout');
+    const roomsContainer = document.getElementById('roomsContainer');
+    const roomCountBadge = document.getElementById('roomCountBadge');
+    const btnRefreshRooms = document.getElementById('btnRefreshRooms');
+    const autoRefreshRooms = document.getElementById('autoRefreshRooms');
+    const playerTableBody = document.getElementById('playerTableBody');
+    const playerSearchInput = document.getElementById('playerSearchInput');
+    const btnSearchPlayers = document.getElementById('btnSearchPlayers');
+    const btnServerConfig = document.getElementById('btnServerConfig');
+    const serverModal = document.getElementById('serverModal');
+    const customApiUrl = document.getElementById('customApiUrl');
+    const btnSaveServer = document.getElementById('btnSaveServer');
+    const btnLocalhostPreset = document.getElementById('btnLocalhostPreset');
+    const btnRenderPreset = document.getElementById('btnRenderPreset');
+    const toastContainer = document.getElementById('toastContainer');
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icon = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-info-circle');
+      toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    async function checkServerStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/health`, { method: 'GET' });
+        if (res.ok) {
+          serverDot.className = 'server-status-dot';
+          serverLabel.textContent = `Online (${new URL(API_BASE).hostname})`;
+        } else {
+          throw new Error('Health check non-200');
+        }
+      } catch (err) {
+        serverDot.className = 'server-status-dot offline';
+        serverLabel.textContent = `Offline (${new URL(API_BASE).hostname})`;
+      }
+    }
+
+    async function adminFetch(endpoint, options = {}) {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      };
+      if (ADMIN_TOKEN) {
+        headers['Authorization'] = `Bearer ${ADMIN_TOKEN}`;
+      }
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 401) {
+          logout();
+          showToast(data.message || 'Session expired. Please log in again.', 'error');
+        }
+        throw new Error(data.message || `Request failed with ${res.status}`);
+      }
+      return data;
+    }
+
+    // --- Tab Switching ---
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.tab;
+        document.getElementById('tabMatches').style.display = target === 'matches' ? 'block' : 'none';
+        document.getElementById('tabPlayers').style.display = target === 'players' ? 'block' : 'none';
+        document.getElementById('tabBroadcast').style.display = target === 'broadcast' ? 'block' : 'none';
+
+        if (target === 'players') loadPlayers();
+        if (target === 'matches') loadRooms();
+      });
+    });
+
+    // --- Login / Logout ---
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('usernameInput').value.trim();
+      const password = document.getElementById('passwordInput').value.trim();
+
+      try {
+        const data = await adminFetch('/admin/login', {
+          method: 'POST',
+          body: JSON.stringify({ username, password })
+        });
+        ADMIN_TOKEN = data.token;
+        localStorage.setItem('beatful_admin_token', ADMIN_TOKEN);
+        localStorage.setItem('beatful_admin_user', data.user || username);
+        showToast('Authenticated as ' + username, 'success');
+        setupDashboard();
+      } catch (err) {
+        showToast(err.message || 'Authentication failed', 'error');
+      }
+    });
+
+    function logout() {
+      ADMIN_TOKEN = '';
+      localStorage.removeItem('beatful_admin_token');
+      loginCard.style.display = 'block';
+      dashboardView.classList.remove('active');
+      adminUserBadge.style.display = 'none';
+      if (roomsPollTimer) clearInterval(roomsPollTimer);
+    }
+
+    btnLogout.addEventListener('click', logout);
+
+    function setupDashboard() {
+      loginCard.style.display = 'none';
+      dashboardView.classList.add('active');
+      adminUserBadge.style.display = 'flex';
+      adminUsername.textContent = localStorage.getItem('beatful_admin_user') || 'nihaldev';
+
+      loadRooms();
+      if (roomsPollTimer) clearInterval(roomsPollTimer);
+      roomsPollTimer = setInterval(() => {
+        if (autoRefreshRooms.checked && document.getElementById('tabMatches').style.display !== 'none') {
+          loadRooms(true);
+        }
+      }, 3000);
+    }
+
+    // --- Room & Score Alteration Logic ---
+    async function loadRooms(silent = false) {
+      try {
+        const data = await adminFetch('/admin/rooms');
+        const rooms = data.rooms || [];
+        roomCountBadge.textContent = `${rooms.length} Rooms`;
+
+        if (rooms.length === 0) {
+          roomsContainer.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 40px 0;">No active rooms found. Start a game from the app or site to see it here!</p>';
+          return;
+        }
+
+        roomsContainer.innerHTML = rooms.map(room => {
+          const isPlaying = room.status === 'playing';
+          const statusColor = isPlaying ? 'var(--admin-success)' : 'var(--admin-accent)';
+          
+          return `
+            <div class="admin-card" style="margin-bottom: 20px; border-color: rgba(255,255,255,0.12);">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--admin-border-subtle); padding-bottom: 12px; margin-bottom: 14px;">
+                <div>
+                  <span style="font-size: 16px; font-weight: 800; color: #fff; font-family: 'Outfit';">Room Code: <span style="color: var(--admin-accent);">${room.roomCode}</span></span>
+                  <span style="font-size: 12px; color: var(--text-dim); margin-left: 8px;">ID: ${room.roomId}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 12px; font-weight: 700; color: ${statusColor}; text-transform: uppercase;">● ${room.status}</span>
+                  <span class="admin-badge" style="font-size: 11px;">Round ${room.round || 1} / ${room.settings?.rounds || 1}</span>
+                  <span class="admin-badge" style="font-size: 11px; border-color: rgba(255,255,255,0.2); color: #fff;">${room.seats.length} Seats</span>
+                </div>
+              </div>
+
+              <!-- Seats -->
+              <div class="seats-grid">
+                ${room.seats.map((seat, sIdx) => {
+                  const isCursed = room.cursedSeat === sIdx;
+                  const score = seat.score ?? 0;
+                  const roundScore = seat.roundScore ?? 0;
+                  const isBot = !seat.userId || seat.isBot;
+                  const isTurn = isPlaying && room.currentTurnSeat === sIdx;
+
+                  return `
+                    <div class="seat-box ${isCursed ? 'cursed' : ''}" id="seat_${room.roomId}_${sIdx}">
+                      <div class="seat-box-header">
+                        <div class="seat-name">
+                          <span>Seat ${sIdx + 1}: ${seat.name || 'Empty'}</span>
+                          ${isBot ? '<span style="font-size: 10px; background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 4px;">BOT</span>' : ''}
+                          ${isTurn ? '<span style="font-size: 10px; background: rgba(46,213,115,0.2); color: #2ED573; padding: 1px 6px; border-radius: 4px;">TURN</span>' : ''}
+                        </div>
+                        <div class="score-badge ${score <= 10 ? 'low' : 'high'}">
+                          Total: ${score} pts
+                        </div>
+                      </div>
+
+                      <div class="seat-meta">
+                        Round Penalty: <strong>${roundScore} pts</strong> ${isCursed ? ' • <span style="color: #d7b5f2; font-weight: 700;">🔮 CURSED (Face Cards)</span>' : ''}
+                      </div>
+
+                      <div class="seat-actions-row">
+                        <!-- Best Score button: 0 pts (Winning) -->
+                        <button class="action-btn btn-best" onclick="setSeatScore('${room.roomId}', ${sIdx}, 0)" title="Set penalty score to 0 to ensure 1st rank">
+                          <i class="fa-solid fa-crown"></i> Win (0 pts)
+                        </button>
+                        
+                        <!-- Worst Score button: 99 pts (Ruin) -->
+                        <button class="action-btn btn-worst" onclick="setSeatScore('${room.roomId}', ${sIdx}, 99)" title="Set penalty score high to drop rank">
+                          <i class="fa-solid fa-skull"></i> Ruin (99 pts)
+                        </button>
+
+                        <!-- Curse Next Round Deal button -->
+                        <button class="action-btn btn-curse" onclick="curseSeat('${room.roomId}', ${sIdx})" title="Curse next deal with Jacks, Queens & Kings">
+                          <i class="fa-solid fa-wand-magic-sparkles"></i> Curse Deal
+                        </button>
+
+                        <!-- Custom Score button -->
+                        <button class="action-btn" onclick="promptCustomScore('${room.roomId}', ${sIdx}, ${score})" style="padding: 5px 8px;" title="Set custom exact score">
+                          <i class="fa-solid fa-pen"></i> Custom
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        if (!silent) showToast('Failed to load rooms: ' + err.message, 'error');
+      }
+    }
+
+    btnRefreshRooms.addEventListener('click', () => loadRooms(false));
+
+    window.setSeatScore = async function(roomId, seatIndex, score) {
+      try {
+        const data = await adminFetch(`/admin/room/${roomId}/score`, {
+          method: 'POST',
+          body: JSON.stringify({ seatIndex, score })
+        });
+        showToast(`Seat ${seatIndex + 1} score altered to ${score} pts!`, 'success');
+        loadRooms(true);
+      } catch (err) {
+        showToast('Error altering score: ' + err.message, 'error');
+      }
+    };
+
+    window.promptCustomScore = function(roomId, seatIndex, current) {
+      const entered = prompt(`Enter custom score for Seat ${seatIndex + 1} (Current: ${current}):`, current);
+      if (entered === null) return;
+      const num = parseInt(entered, 10);
+      if (isNaN(num) || num < 0 || num > 500) {
+        alert('Please enter an integer between 0 and 500.');
+        return;
+      }
+      window.setSeatScore(roomId, seatIndex, num);
+    };
+
+    window.curseSeat = async function(roomId, seatIndex) {
+      try {
+        const data = await adminFetch(`/admin/room/${roomId}/curse`, {
+          method: 'POST',
+          body: JSON.stringify({ seatIndex })
+        });
+        showToast(`Seat ${seatIndex + 1} CURSED! Will receive high face cards (J, Q, K) next round.`, 'warning');
+        loadRooms(true);
+      } catch (err) {
+        showToast('Error cursing seat: ' + err.message, 'error');
+      }
+    };
+
+    // --- Players & Coins Logic ---
+    async function loadPlayers(query = '') {
+      try {
+        playerTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading players...</td></tr>';
+        const url = query ? `/admin/users?q=${encodeURIComponent(query)}` : '/admin/users';
+        const data = await adminFetch(url);
+        const users = data.users || [];
+
+        if (users.length === 0) {
+          playerTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">No players found.</td></tr>';
+          return;
+        }
+
+        playerTableBody.innerHTML = users.map(u => {
+          const dateStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-';
+          return `
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: #fff;">${u.displayName}</div>
+                <div style="font-size: 11px; color: var(--text-dim);">Guest: ${u.guestId ? u.guestId.slice(0, 8) + '...' : '-'}</div>
+              </td>
+              <td><code style="font-size: 11px; color: var(--text-muted);">${u.userId}</code></td>
+              <td>
+                <strong style="color: var(--admin-accent); font-size: 14px;">
+                  <i class="fa-solid fa-coins"></i> ${(u.coins ?? 0).toLocaleString()}
+                </strong>
+              </td>
+              <td>${u.stats?.wins || 0}W / ${u.stats?.matchesPlayed || 0}M</td>
+              <td style="font-size: 12px; color: var(--text-muted);">${dateStr}</td>
+              <td>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                  <button class="action-btn btn-gift" onclick="adjustCoins('${u.userId}', 500, '${u.displayName}')">
+                    +500
+                  </button>
+                  <button class="action-btn btn-gift" onclick="adjustCoins('${u.userId}', 2500, '${u.displayName}')">
+                    +2.5K
+                  </button>
+                  <button class="action-btn btn-worst" onclick="adjustCoins('${u.userId}', -500, '${u.displayName}')">
+                    -500
+                  </button>
+                  <button class="action-btn" onclick="promptCustomCoins('${u.userId}', '${u.displayName}')" style="padding: 5px 8px;">
+                    Custom
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        showToast('Failed to load players: ' + err.message, 'error');
+      }
+    }
+
+    btnSearchPlayers.addEventListener('click', () => {
+      loadPlayers(playerSearchInput.value.trim());
+    });
+
+    playerSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') loadPlayers(playerSearchInput.value.trim());
+    });
+
+    window.adjustCoins = async function(userId, amount, name) {
+      try {
+        const data = await adminFetch('/admin/coins/gift', {
+          method: 'POST',
+          body: JSON.stringify({ userId, amount })
+        });
+        const sign = amount > 0 ? '+' : '';
+        showToast(`${sign}${amount} coins granted to ${name}! New Balance: ${data.balanceAfter.toLocaleString()}`, 'success');
+        loadPlayers(playerSearchInput.value.trim());
+      } catch (err) {
+        showToast('Coin adjustment failed: ' + err.message, 'error');
+      }
+    };
+
+    window.promptCustomCoins = function(userId, name) {
+      const entered = prompt(`Enter coin adjustment for ${name} (e.g. 1000 to grant, -500 to deduct):`, "1000");
+      if (entered === null) return;
+      const amount = parseInt(entered, 10);
+      if (isNaN(amount) || amount === 0) {
+        alert('Invalid amount.');
+        return;
+      }
+      window.adjustCoins(userId, amount, name);
+    };
+
+    // --- Broadcast Form ---
+    document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const roomId = document.getElementById('broadcastRoomId').value.trim();
+      const message = document.getElementById('broadcastMessage').value.trim();
+
+      try {
+        await adminFetch(`/room/${roomId}/message`, {
+          method: 'POST',
+          body: JSON.stringify({ message })
+        });
+        showToast(`Announcement sent to room ${roomId}!`, 'success');
+        document.getElementById('broadcastMessage').value = '';
+      } catch (err) {
+        showToast('Failed to broadcast: ' + err.message, 'error');
+      }
+    });
+
+    // --- Server Endpoint Config Modal ---
+    btnServerConfig.addEventListener('click', () => {
+      customApiUrl.value = API_BASE;
+      serverModal.style.display = 'flex';
+    });
+
+    btnLocalhostPreset.addEventListener('click', () => {
+      customApiUrl.value = 'http://localhost:3000';
+    });
+
+    btnRenderPreset.addEventListener('click', () => {
+      customApiUrl.value = 'https://beatful-api.onrender.com';
+    });
+
+    btnSaveServer.addEventListener('click', () => {
+      API_BASE = customApiUrl.value.trim().replace(/\/+$/, '');
+      localStorage.setItem('beatful_admin_api', API_BASE);
+      serverModal.style.display = 'none';
+      checkServerStatus();
+      showToast('API endpoint set to ' + API_BASE, 'info');
+      if (ADMIN_TOKEN) loadRooms();
+    });
+
+    serverModal.addEventListener('click', (e) => {
+      if (e.target === serverModal) serverModal.style.display = 'none';
+    });
+
+    // --- Boot Check ---
+    checkServerStatus();
+    if (ADMIN_TOKEN) {
+      setupDashboard();
+    }
+  </script>
+</body>
+</html>
