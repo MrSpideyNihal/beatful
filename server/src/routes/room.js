@@ -219,18 +219,35 @@ router.post(
   }),
 );
 
-/** Quick chat: send a predefined emoji message to all players. */
+/** Chat: send predefined quick-chat or custom text message to all players. */
 router.post(
   '/:id/chat',
   rateLimit({ name: 'room_chat', limit: 20, windowMs: 60_000 }),
   asyncRoute(async (req, res) => {
     const roomId = validate.identifier(req.params.id, 'room id');
     const body = req.body && typeof req.body === 'object' ? req.body : {};
-    const messageIndex = Number(body.messageIndex);
-    if (!Number.isInteger(messageIndex) || messageIndex < 0 || messageIndex > 7) {
-      throw apiError('BAD_REQUEST', 'Invalid chat message index.');
+    let payload;
+
+    const rawText = body.text != null ? body.text : body.message;
+    if (rawText != null) {
+      if (typeof rawText !== 'string' || rawText.trim().length === 0) {
+        throw apiError('BAD_REQUEST', 'Chat message cannot be empty.');
+      }
+      if (rawText.trim().length > 120) {
+        throw apiError('BAD_REQUEST', 'Chat message is too long (max 120 characters).');
+      }
+      payload = { text: rawText.trim() };
+    } else if (body.messageIndex != null) {
+      const messageIndex = Number(body.messageIndex);
+      if (!Number.isInteger(messageIndex) || messageIndex < 0 || messageIndex > 7) {
+        throw apiError('BAD_REQUEST', 'Invalid chat message index.');
+      }
+      payload = { messageIndex };
+    } else {
+      throw apiError('BAD_REQUEST', 'Missing chat message or index.');
     }
-    const room = await rooms.sendChat(req.user._id, roomId, messageIndex);
+
+    const room = await rooms.sendChat(req.user._id, roomId, payload);
     res.json({ room: rooms.roomView(room, req.user._id) });
   }),
 );

@@ -634,6 +634,22 @@ test('quick chat sends predefined messages to room notices', async () => {
   assert.equal(bad.status, 400);
 });
 
+test('chat sends custom text messages to room notices and enforces validation', async () => {
+  const { host, guest, roomId } = await startedPair();
+  const res = await guest.post(`/room/${roomId}/chat`, { text: 'Hey, nice game!' });
+  assert.equal(res.status, 200);
+  const notices = res.body.room.notices;
+  const chat = notices.find((n) => n.kind === 'chat' && n.text.includes('Hey, nice game!'));
+  assert.ok(chat, 'custom chat notice should be present');
+
+  // Rejects empty or oversized messages
+  const empty = await guest.post(`/room/${roomId}/chat`, { text: '   ' });
+  assert.equal(empty.status, 400);
+
+  const tooLong = await guest.post(`/room/${roomId}/chat`, { text: 'a'.repeat(121) });
+  assert.equal(tooLong.status, 400);
+});
+
 test('host can start a rematch in the same room once finished', async () => {
   const { host, guest, roomId } = await startedPair();
   const forward = await harness.fastForward(roomId);

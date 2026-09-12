@@ -140,7 +140,8 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
         label: 'Chat',
         onPressed: () => showQuickChatSheet(
           context,
-          onSelect: (index) => _control.sendChat(index),
+          onSelect: (index) => _control.sendChat(messageIndex: index),
+          onSendCustom: (text) => _control.sendChat(text: text),
         ),
       ),
       HeaderButton(

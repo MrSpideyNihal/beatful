@@ -864,16 +864,37 @@ async function settleMatch(room) {
 /* ------------------------------------------------------------------- chat */
 
 /**
- * Send a predefined quick-chat message. The message is stored as a notice so
- * all players see it through normal polling. Rate limited at the route layer.
+ * Send a chat message (either predefined quick-chat or custom text). The
+ * message is stored as a notice so all players see it through normal polling.
+ * Rate limited at the route layer.
  */
-async function sendChat(userId, roomId, messageIndex) {
+async function sendChat(userId, roomId, payload) {
+  const messageIndex = typeof payload === 'number'
+    ? payload
+    : payload && payload.messageIndex != null
+      ? Number(payload.messageIndex)
+      : null;
+  const customText = typeof payload === 'object' && payload?.text != null
+    ? String(payload.text).trim()
+    : null;
+
   return withLock(roomId, async () => {
     const room = await requireRoom(roomId);
     const player = requireMember(room, userId);
     if (player.isBot) throw apiError('BAD_REQUEST', 'Bots cannot chat.');
-    const text = CHAT_MESSAGES[messageIndex];
-    if (!text) throw apiError('BAD_REQUEST', 'Invalid message index.');
+
+    let text;
+    if (customText) {
+      if (customText.length === 0) throw apiError('BAD_REQUEST', 'Chat message cannot be empty.');
+      if (customText.length > 120) throw apiError('BAD_REQUEST', 'Chat message too long.');
+      text = customText.replace(/[\r\n\t]+/g, ' ');
+    } else if (messageIndex != null) {
+      text = CHAT_MESSAGES[messageIndex];
+      if (!text) throw apiError('BAD_REQUEST', 'Invalid message index.');
+    } else {
+      throw apiError('BAD_REQUEST', 'No chat message provided.');
+    }
+
     const playerName = player.name.trim().toLowerCase() === 'you'
       ? `Player ${player.seatIndex + 1}`
       : player.name;
@@ -883,7 +904,7 @@ async function sendChat(userId, roomId, messageIndex) {
       fromName: playerName,
       fromSeat: player.seatIndex,
       seatIndex: player.seatIndex,
-      messageIndex,
+      messageIndex: messageIndex ?? -1,
       text: `${playerName}: ${text}`,
     });
     return commit(room);

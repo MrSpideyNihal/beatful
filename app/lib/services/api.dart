@@ -271,8 +271,15 @@ class Api {
   Future<Map<String, Object?>> leaveRoom(String roomId) =>
       _send('POST', '/room/$roomId/leave', body: const {});
 
-  Future<Map<String, Object?>> sendChat(String roomId, int messageIndex) =>
-      _send('POST', '/room/$roomId/chat', body: {'messageIndex': messageIndex});
+  Future<Map<String, Object?>> sendChat(
+    String roomId, {
+    int? messageIndex,
+    String? text,
+  }) =>
+      _send('POST', '/room/$roomId/chat', body: {
+        if (messageIndex != null) 'messageIndex': messageIndex,
+        if (text != null) 'text': text,
+      });
 
   Future<Map<String, Object?>> rematch(String roomId) =>
       _send('POST', '/room/$roomId/rematch', body: const {});

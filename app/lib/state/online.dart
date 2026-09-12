@@ -458,11 +458,11 @@ class OnlineController extends Notifier<OnlineRoom> {
     await _send(() => _api.botTakeover(room.roomId, seatIndex));
   }
 
-  Future<void> sendChat(int messageIndex) async {
+  Future<void> sendChat({int? messageIndex, String? text}) async {
     final room = _room;
     if (room == null) return;
     await _send(
-      () => _api.sendChat(room.roomId, messageIndex),
+      () => _api.sendChat(room.roomId, messageIndex: messageIndex, text: text),
       onDone: _cues.tap,
     );
   }
