@@ -1096,21 +1096,27 @@ async function rematchRoom(userId, roomId) {
 function listRoomsAdmin() {
   const roomsList = [];
   for (const room of cache.values()) {
+    const seatList = (room.players || []).map((p) => ({
+      userId: p.userId,
+      seatIndex: p.seatIndex,
+      name: p.name,
+      isBot: p.isBot,
+      score: room.gameState?.scores ? room.gameState.scores[p.seatIndex] : 0,
+      roundScore: room.gameState?.roundScores ? room.gameState.roundScores[p.seatIndex] : (room.gameState?.scores ? room.gameState.scores[p.seatIndex] : 0),
+      cardsCount: room.gameState?.hands && room.gameState.hands[p.seatIndex] ? room.gameState.hands[p.seatIndex].length : 0,
+    }));
+
     roomsList.push({
       roomId: room._id,
       roomCode: room.roomCode,
       status: room.status,
-      round: room.gameState ? room.gameState.round : null,
-      totalRounds: room.settings.rounds,
+      round: room.gameState ? room.gameState.round : 1,
+      totalRounds: room.settings?.rounds || 1,
+      currentTurnSeat: room.gameState ? room.gameState.currentTurnSeat : null,
       cursedSeat: room.cursedSeat ?? null,
-      players: room.players.map((p) => ({
-        userId: p.userId,
-        seatIndex: p.seatIndex,
-        name: p.name,
-        isBot: p.isBot,
-        score: room.gameState?.scores ? room.gameState.scores[p.seatIndex] : 0,
-        cardsCount: room.gameState?.hands && room.gameState.hands[p.seatIndex] ? room.gameState.hands[p.seatIndex].length : 0,
-      })),
+      seats: seatList,
+      players: seatList,
+      settings: room.settings,
       createdAt: room.createdAt,
       updatedAt: room.updatedAt,
     });

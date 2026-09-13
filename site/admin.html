@@ -825,27 +825,29 @@
         roomsContainer.innerHTML = rooms.map(room => {
           const isPlaying = room.status === 'playing';
           const statusColor = isPlaying ? 'var(--admin-success)' : 'var(--admin-accent)';
+          const seats = room.seats || room.players || [];
+          const totalRounds = room.totalRounds || room.settings?.rounds || 1;
           
           return `
             <div class="admin-card" style="margin-bottom: 20px; border-color: rgba(255,255,255,0.12);">
               <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--admin-border-subtle); padding-bottom: 12px; margin-bottom: 14px;">
                 <div>
-                  <span style="font-size: 16px; font-weight: 800; color: #fff; font-family: 'Outfit';">Room Code: <span style="color: var(--admin-accent);">${room.roomCode}</span></span>
+                  <span style="font-size: 16px; font-weight: 800; color: #fff; font-family: 'Outfit';">Room Code: <span style="color: var(--admin-accent);">${room.roomCode || '-'}</span></span>
                   <span style="font-size: 12px; color: var(--text-dim); margin-left: 8px;">ID: ${room.roomId}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 12px; font-weight: 700; color: ${statusColor}; text-transform: uppercase;">● ${room.status}</span>
-                  <span class="admin-badge" style="font-size: 11px;">Round ${room.round || 1} / ${room.settings?.rounds || 1}</span>
-                  <span class="admin-badge" style="font-size: 11px; border-color: rgba(255,255,255,0.2); color: #fff;">${room.seats.length} Seats</span>
+                  <span style="font-size: 12px; font-weight: 700; color: ${statusColor}; text-transform: uppercase;">● ${room.status || 'unknown'}</span>
+                  <span class="admin-badge" style="font-size: 11px;">Round ${room.round || 1} / ${totalRounds}</span>
+                  <span class="admin-badge" style="font-size: 11px; border-color: rgba(255,255,255,0.2); color: #fff;">${seats.length} Seats</span>
                 </div>
               </div>
 
               <!-- Seats -->
               <div class="seats-grid">
-                ${room.seats.map((seat, sIdx) => {
+                ${seats.map((seat, sIdx) => {
                   const isCursed = room.cursedSeat === sIdx;
                   const score = seat.score ?? 0;
-                  const roundScore = seat.roundScore ?? 0;
+                  const roundScore = seat.roundScore ?? seat.score ?? 0;
                   const isBot = !seat.userId || seat.isBot;
                   const isTurn = isPlaying && room.currentTurnSeat === sIdx;
 
