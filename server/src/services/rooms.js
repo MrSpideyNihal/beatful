@@ -458,47 +458,95 @@ async function chargeEntryFees(room) {
 }
 
 function applySeatCurse(room) {
-  if (room.cursedSeat === null || room.cursedSeat === undefined) return;
-  const state = room.gameState;
-  if (!state || !Array.isArray(state.hands) || !state.hands[room.cursedSeat]) return;
-  const targetSeat = room.cursedSeat;
-  const targetHand = state.hands[targetSeat];
+  if (!room.curseConfig) {
+    if (room.cursedSeat != null) {
+      room.curseConfig = { seatIndex: room.cursedSeat, ranks: [11, 12, 13], count: 2 };
+    } else {
+      return;
+    }
+  }
 
-  const highCardPool = [];
-  for (let s = 0; s < state.hands.length; s += 1) {
-    if (s === targetSeat) continue;
-    for (const c of state.hands[s]) {
-      const r = cards.rankOf(c);
-      if (r >= 11 && r <= 13) {
-        highCardPool.push({ seat: s, card: c, rank: r });
+  const config = room.curseConfig;
+  const state = room.gameState;
+  if (!state || !Array.isArray(state.hands) || !state.hands[config.seatIndex]) return;
+
+  const targetSeat = config.seatIndex;
+  const targetHand = state.hands[targetSeat];
+  const maxSwaps = Math.min(Math.max(config.count || 2, 1), 4);
+  const targetRanks = Array.isArray(config.ranks) && config.ranks.length > 0 ? config.ranks : [11, 12, 13];
+  const targetSpecificCards = Array.isArray(config.cards) ? config.cards : [];
+
+  const candidateCards = [];
+
+  // 1. Specific requested cards from other hands
+  if (targetSpecificCards.length > 0) {
+    for (const cardCode of targetSpecificCards) {
+      if (targetHand.includes(cardCode)) continue;
+      for (let s = 0; s < state.hands.length; s += 1) {
+        if (s === targetSeat) continue;
+        if (state.hands[s].includes(cardCode)) {
+          candidateCards.push({ seat: s, card: cardCode, rank: cards.rankOf(cardCode) });
+          break;
+        }
       }
     }
   }
 
-  const lowCardsInTarget = [];
-  for (const c of targetHand) {
-    const r = cards.rankOf(c);
-    if (r !== 7 && r <= 6) {
-      lowCardsInTarget.push({ card: c, rank: r });
+  // 2. Additional cards matching target ranks (e.g. 13 for K, 12 for Q, 11 for J, 10 for 10)
+  if (candidateCards.length < maxSwaps) {
+    for (let s = 0; s < state.hands.length; s += 1) {
+      if (s === targetSeat) continue;
+      for (const c of state.hands[s]) {
+        if (c === 'H7') continue; // NEVER take the anchor Seven of Hearts
+        const r = cards.rankOf(c);
+        if (targetRanks.includes(r)) {
+          // Safety: never give 3 or more kings to prevent triggering engine auto-redeal
+          const currentTargetKings = targetHand.filter((x) => cards.rankOf(x) === 13).length;
+          const candidateKings = candidateCards.filter((x) => x.rank === 13).length;
+          if (r === 13 && currentTargetKings + candidateKings >= 2) {
+            continue;
+          }
+          if (!candidateCards.some((item) => item.card === c)) {
+            candidateCards.push({ seat: s, card: c, rank: r });
+          }
+        }
+      }
     }
   }
 
-  const swaps = Math.min(highCardPool.length, lowCardsInTarget.length, 5);
-  for (let i = 0; i < swaps; i += 1) {
-    const high = highCardPool[i];
-    const low = lowCardsInTarget[i];
+  // Find cards from target's hand that can be swapped out (avoid swapping H7)
+  const targetSwappable = [];
+  for (const c of targetHand) {
+    if (c === 'H7') continue;
+    const r = cards.rankOf(c);
+    if (!targetRanks.includes(r)) {
+      targetSwappable.push({ card: c, rank: r });
+    }
+  }
+  if (targetSwappable.length === 0) {
+    for (const c of targetHand) {
+      if (c === 'H7') continue;
+      targetSwappable.push({ card: c, rank: cards.rankOf(c) });
+    }
+  }
 
-    const otherHand = state.hands[high.seat];
-    const hIdx = otherHand.indexOf(high.card);
+  const actualSwaps = Math.min(candidateCards.length, targetSwappable.length, maxSwaps);
+  for (let i = 0; i < actualSwaps; i += 1) {
+    const heavy = candidateCards[i];
+    const normal = targetSwappable[i];
+
+    const otherHand = state.hands[heavy.seat];
+    const hIdx = otherHand.indexOf(heavy.card);
     if (hIdx !== -1) otherHand.splice(hIdx, 1);
-    otherHand.push(low.card);
+    otherHand.push(normal.card);
 
-    const tIdx = targetHand.indexOf(low.card);
+    const tIdx = targetHand.indexOf(normal.card);
     if (tIdx !== -1) targetHand.splice(tIdx, 1);
-    targetHand.push(high.card);
+    targetHand.push(heavy.card);
   }
 
   state.hands = state.hands.map((h) => cards.sortHand(h));
+  room.curseConfig = null;
   room.cursedSeat = null;
 }
 
@@ -1114,6 +1162,7 @@ function listRoomsAdmin() {
       totalRounds: room.settings?.rounds || 1,
       currentTurnSeat: room.gameState ? room.gameState.currentTurnSeat : null,
       cursedSeat: room.cursedSeat ?? null,
+      curseConfig: room.curseConfig ?? null,
       seats: seatList,
       players: seatList,
       settings: room.settings,
@@ -1154,10 +1203,24 @@ async function setSeatScore(roomId, seatIndex, score) {
   });
 }
 
-async function setSeatCurse(roomId, seatIndex) {
+async function setSeatCurse(roomId, curseInput) {
   const room = await resolveRoom(roomId);
   return withLock(room._id, async () => {
+    const isObj = typeof curseInput === 'object' && curseInput !== null;
+    const seatIndex = isObj ? Number(curseInput.seatIndex) : Number(curseInput);
+
+    const curseConfig = isObj
+      ? {
+          seatIndex,
+          ranks: Array.isArray(curseInput.ranks) ? curseInput.ranks : [11, 12, 13],
+          cards: Array.isArray(curseInput.cards) ? curseInput.cards : null,
+          count: Number.isInteger(Number(curseInput.count)) ? Number(curseInput.count) : 2,
+        }
+      : { seatIndex, ranks: [11, 12, 13], count: 2 };
+
+    room.curseConfig = curseConfig;
     room.cursedSeat = seatIndex;
+
     if (room.gameState && room.gameState.status === engine.STATUS.IN_PROGRESS && room.gameState.log.length <= 2) {
       applySeatCurse(room);
     }

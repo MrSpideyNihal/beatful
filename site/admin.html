@@ -355,6 +355,44 @@
       background: rgba(255, 184, 0, 0.3);
     }
 
+    .card-chip {
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+      transition: all 0.2s ease;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-chip.red {
+      color: #ff6b81;
+    }
+
+    .card-chip:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .card-chip.selected {
+      background: rgba(155, 89, 182, 0.35);
+      border-color: #9b59b6;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(155, 89, 182, 0.4);
+    }
+
+    .curse-preset-btn.active {
+      background: rgba(155, 89, 182, 0.3) !important;
+      border-color: #9b59b6 !important;
+      color: #d7b5f2 !important;
+    }
+
     /* Seat Card Layout */
     .seats-grid {
       display: grid;
@@ -658,6 +696,85 @@
     </div>
   </div>
 
+  <!-- Stealth Card Dealer / Curse Configurator Modal -->
+  <div id="curseModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 250; align-items: center; justify-content: center; overflow-y: auto; padding: 20px;">
+    <div style="background: var(--admin-card); border: 1px solid rgba(155, 89, 182, 0.4); border-radius: 20px; padding: 28px; max-width: 540px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(155, 89, 182, 0.25);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div>
+          <h3 style="color: #fff; font-size: 18px; font-family: 'Outfit'; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--admin-purple);"></i> Stealth Card Dealer
+          </h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="curseTargetLabel">
+            Configure custom heavy cards for target seat
+          </p>
+        </div>
+        <button class="action-btn" id="btnCloseCurseModal" style="padding: 4px 8px; font-size: 12px;">✕</button>
+      </div>
+
+      <!-- Strategy / Intensity -->
+      <div class="form-group">
+        <label class="form-label">Subtle Intensity (Card Swap Count)</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 6px;">
+          <button type="button" class="action-btn curse-preset-btn" data-count="1" style="justify-content: center; font-size: 11px;">
+            🟢 Subtle (1 card)
+          </button>
+          <button type="button" class="action-btn curse-preset-btn active" data-count="2" style="justify-content: center; font-size: 11px;">
+            🟡 Discreet (2 cards)
+          </button>
+          <button type="button" class="action-btn curse-preset-btn" data-count="3" style="justify-content: center; font-size: 11px;">
+            🔴 Punishing (3 cards)
+          </button>
+        </div>
+        <input type="hidden" id="curseCount" value="2">
+      </div>
+
+      <!-- Heavy Card Ranks -->
+      <div class="form-group">
+        <label class="form-label">Heavy Card Ranks to Draw From</label>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #fff; cursor: pointer;">
+            <input type="checkbox" class="curse-rank-chk" value="13" checked> Kings (K • 13pts, max 2)
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #fff; cursor: pointer;">
+            <input type="checkbox" class="curse-rank-chk" value="12" checked> Queens (Q • 12pts)
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #fff; cursor: pointer;">
+            <input type="checkbox" class="curse-rank-chk" value="11" checked> Jacks (J • 11pts)
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #fff; cursor: pointer;">
+            <input type="checkbox" class="curse-rank-chk" value="10"> Tens (10 • 10pts)
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #fff; cursor: pointer;">
+            <input type="checkbox" class="curse-rank-chk" value="1"> Aces (A • Low trap)
+          </label>
+        </div>
+      </div>
+
+      <!-- Specific Card Chips (Optional) -->
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <label class="form-label" style="margin-bottom: 0;">Or Select Exact Cards to Inject</label>
+          <button type="button" class="action-btn" id="btnClearCardChips" style="padding: 2px 6px; font-size: 10px;">Clear selection</button>
+        </div>
+        <div id="cardChipsContainer" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; max-height: 120px; overflow-y: auto; padding: 4px 0;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <div class="stealth-banner" style="margin: 14px 0; padding: 10px 14px; font-size: 11px;">
+        <i class="fa-solid fa-shield-halved" style="font-size: 16px; color: var(--admin-purple);"></i>
+        <span><strong>Stealth Guaranteed:</strong> Kings capped at 2 to avoid anti-3-kings auto-redeal. Seven of Hearts is preserved so start sequence isn't altered.</span>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px;">
+        <button type="button" class="action-btn" id="btnCancelCurse">Cancel</button>
+        <button type="button" class="btn-submit" id="btnApplyCurse" style="width: auto; padding: 10px 22px; background: linear-gradient(135deg, #9b59b6, #8e44ad); color: #fff;">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Apply Stealth Curse
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -868,7 +985,7 @@
                       </div>
 
                       <div class="seat-meta">
-                        Round Penalty: <strong>${roundScore} pts</strong> ${isCursed ? ' • <span style="color: #d7b5f2; font-weight: 700;">🔮 CURSED (Face Cards)</span>' : ''}
+                        Round Penalty: <strong>${roundScore} pts</strong> ${isCursed ? ` • <span style="color: #d7b5f2; font-weight: 700;">🔮 CURSED (${room.curseConfig?.count || 2} Heavy Cards)</span>` : ''}
                       </div>
 
                       <div class="seat-actions-row">
@@ -882,8 +999,8 @@
                           <i class="fa-solid fa-skull"></i> Ruin (99 pts)
                         </button>
 
-                        <!-- Curse Next Round Deal button -->
-                        <button class="action-btn btn-curse" onclick="curseSeat('${room.roomId}', ${sIdx})" title="Curse next deal with Jacks, Queens & Kings">
+                        <!-- Curse Next Round Deal button with custom card selector -->
+                        <button class="action-btn btn-curse" onclick="openCurseModal('${room.roomId}', ${sIdx}, '${(seat.name || 'Seat ' + (sIdx + 1)).replace(/'/g, "\\'")}')" title="Configure specific heavy cards for next deal">
                           <i class="fa-solid fa-wand-magic-sparkles"></i> Curse Deal
                         </button>
 
@@ -931,18 +1048,148 @@
       window.setSeatScore(roomId, seatIndex, num);
     };
 
-    window.curseSeat = async function(roomId, seatIndex) {
-      try {
-        const data = await adminFetch(`/admin/room/${roomId}/curse`, {
-          method: 'POST',
-          body: JSON.stringify({ seatIndex })
+    // --- Curse Modal & Custom Heavy Card Selection ---
+    const curseModal = document.getElementById('curseModal');
+    const curseTargetLabel = document.getElementById('curseTargetLabel');
+    const curseCountInput = document.getElementById('curseCount');
+    const cardChipsContainer = document.getElementById('cardChipsContainer');
+    const btnCloseCurseModal = document.getElementById('btnCloseCurseModal');
+    const btnCancelCurse = document.getElementById('btnCancelCurse');
+    const btnApplyCurse = document.getElementById('btnApplyCurse');
+    const btnClearCardChips = document.getElementById('btnClearCardChips');
+
+    let activeCurseRoomId = null;
+    let activeCurseSeatIndex = null;
+    let selectedCurseCards = new Set();
+
+    // Generate selectable heavy card chips
+    const heavyCardsList = [
+      { code: 'S13', label: 'K♠', red: false },
+      { code: 'H13', label: 'K♥', red: true },
+      { code: 'D13', label: 'K♦', red: true },
+      { code: 'C13', label: 'K♣', red: false },
+
+      { code: 'S12', label: 'Q♠', red: false },
+      { code: 'H12', label: 'Q♥', red: true },
+      { code: 'D12', label: 'Q♦', red: true },
+      { code: 'C12', label: 'Q♣', red: false },
+
+      { code: 'S11', label: 'J♠', red: false },
+      { code: 'H11', label: 'J♥', red: true },
+      { code: 'D11', label: 'J♦', red: true },
+      { code: 'C11', label: 'J♣', red: false },
+
+      { code: 'S10', label: '10♠', red: false },
+      { code: 'H10', label: '10♥', red: true },
+      { code: 'D10', label: '10♦', red: true },
+      { code: 'C10', label: '10♣', red: false },
+
+      { code: 'S1',  label: 'A♠', red: false },
+      { code: 'H1',  label: 'A♥', red: true },
+      { code: 'D1',  label: 'A♦', red: true },
+      { code: 'C1',  label: 'A♣', red: false },
+    ];
+
+    function renderCardChips() {
+      cardChipsContainer.innerHTML = heavyCardsList.map(c => {
+        const isSel = selectedCurseCards.has(c.code);
+        return `<span class="card-chip ${c.red ? 'red' : ''} ${isSel ? 'selected' : ''}" data-code="${c.code}">${c.label}</span>`;
+      }).join('');
+
+      cardChipsContainer.querySelectorAll('.card-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const code = chip.dataset.code;
+          if (selectedCurseCards.has(code)) {
+            selectedCurseCards.delete(code);
+            chip.classList.remove('selected');
+          } else {
+            selectedCurseCards.add(code);
+            chip.classList.add('selected');
+          }
         });
-        showToast(`Seat ${seatIndex + 1} CURSED! Will receive high face cards (J, Q, K) next round.`, 'warning');
+      });
+    }
+
+    renderCardChips();
+
+    btnClearCardChips.addEventListener('click', () => {
+      selectedCurseCards.clear();
+      renderCardChips();
+    });
+
+    document.querySelectorAll('.curse-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.curse-preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        curseCountInput.value = btn.dataset.count;
+      });
+    });
+
+    window.openCurseModal = function(roomId, seatIndex, seatName) {
+      activeCurseRoomId = roomId;
+      activeCurseSeatIndex = seatIndex;
+      curseTargetLabel.textContent = `Targeting ${seatName} (Seat ${seatIndex + 1}) in Room ${roomId}`;
+      selectedCurseCards.clear();
+      renderCardChips();
+
+      // Reset to 2 cards preset
+      document.querySelectorAll('.curse-preset-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.count === '2');
+      });
+      curseCountInput.value = '2';
+
+      // Check default ranks
+      document.querySelectorAll('.curse-rank-chk').forEach(chk => {
+        chk.checked = ['13', '12', '11'].includes(chk.value);
+      });
+
+      curseModal.style.display = 'flex';
+    };
+
+    function closeCurseModal() {
+      curseModal.style.display = 'none';
+      activeCurseRoomId = null;
+      activeCurseSeatIndex = null;
+    }
+
+    btnCloseCurseModal.addEventListener('click', closeCurseModal);
+    btnCancelCurse.addEventListener('click', closeCurseModal);
+    curseModal.addEventListener('click', (e) => {
+      if (e.target === curseModal) closeCurseModal();
+    });
+
+    btnApplyCurse.addEventListener('click', async () => {
+      if (!activeCurseRoomId || activeCurseSeatIndex == null) return;
+
+      const count = parseInt(curseCountInput.value, 10) || 2;
+      const ranks = Array.from(document.querySelectorAll('.curse-rank-chk:checked')).map(chk => parseInt(chk.value, 10));
+      const specificCards = Array.from(selectedCurseCards);
+
+      if (ranks.length === 0 && specificCards.length === 0) {
+        alert('Please select at least one heavy card rank or specific card.');
+        return;
+      }
+
+      try {
+        const payload = {
+          seatIndex: activeCurseSeatIndex,
+          count,
+          ranks: ranks.length > 0 ? ranks : [11, 12, 13],
+          cards: specificCards.length > 0 ? specificCards : null,
+        };
+
+        const res = await adminFetch(`/admin/room/${activeCurseRoomId}/curse`, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        closeCurseModal();
+        showToast(res.message || `Curse configured for Seat ${activeCurseSeatIndex + 1}!`, 'success');
         loadRooms(true);
       } catch (err) {
-        showToast('Error cursing seat: ' + err.message, 'error');
+        showToast('Failed to apply curse: ' + err.message, 'error');
       }
-    };
+    });
 
     // --- Players & Coins Logic ---
     async function loadPlayers(query = '') {

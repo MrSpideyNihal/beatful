@@ -144,13 +144,13 @@ router.post(
 );
 
 /**
- * Curse a player seat for the next round (deal high penalty cards: J, Q, K)
+ * Curse a player seat for the next round (deal selected heavy penalty cards)
  */
 router.post(
   '/room/:id/curse',
   requireAdmin,
   asyncRoute(async (req, res) => {
-    const roomId = validate.identifier(req.params.id, 'room id');
+    const roomId = validate.identifier(req.params.id, 'room id or code');
     const body = validate.requireObject(req.body);
     const seatIndex = Number(body.seatIndex);
 
@@ -158,9 +158,33 @@ router.post(
       throw apiError('BAD_REQUEST', 'Invalid seat index.');
     }
 
-    await rooms.setSeatCurse(roomId, seatIndex);
-    log.info('Admin cursed seat with high cards', { admin: req.admin.username, roomId, seatIndex });
-    res.json({ ok: true, roomId, cursedSeat: seatIndex, message: `Seat ${seatIndex + 1} cursed with high cards!` });
+    const ranks = Array.isArray(body.ranks)
+      ? body.ranks.map(Number).filter((r) => Number.isInteger(r) && r >= 1 && r <= 13)
+      : null;
+    const cardsList = Array.isArray(body.cards)
+      ? body.cards.map((c) => String(c).trim().toUpperCase()).filter(Boolean)
+      : null;
+    const count = Number.isInteger(Number(body.count))
+      ? Math.min(Math.max(Number(body.count), 1), 4)
+      : 2;
+
+    const curseConfig = {
+      seatIndex,
+      ranks: ranks && ranks.length > 0 ? ranks : [11, 12, 13],
+      cards: cardsList && cardsList.length > 0 ? cardsList : null,
+      count,
+    };
+
+    const room = await rooms.setSeatCurse(roomId, curseConfig);
+    log.info('Admin configured seat curse', { admin: req.admin.username, roomId: room._id, curseConfig });
+    res.json({
+      ok: true,
+      roomId: room._id,
+      roomCode: room.roomCode,
+      cursedSeat: seatIndex,
+      curseConfig,
+      message: `Seat ${seatIndex + 1} subtle curse applied (${curseConfig.count} heavy cards)!`,
+    });
   }),
 );
 
