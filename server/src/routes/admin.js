@@ -164,14 +164,15 @@ router.post(
     const cardsList = Array.isArray(body.cards)
       ? body.cards.map((c) => String(c).trim().toUpperCase()).filter(Boolean)
       : null;
-    const count = Number.isInteger(Number(body.count))
-      ? Math.min(Math.max(Number(body.count), 1), 4)
-      : 2;
+    const isSpecific = cardsList && cardsList.length > 0;
+    const count = isSpecific
+      ? cardsList.length
+      : (Number.isInteger(Number(body.count)) ? Math.min(Math.max(Number(body.count), 1), 4) : 2);
 
     const curseConfig = {
       seatIndex,
-      ranks: ranks && ranks.length > 0 ? ranks : [11, 12, 13],
-      cards: cardsList && cardsList.length > 0 ? cardsList : null,
+      ranks: isSpecific ? null : (ranks && ranks.length > 0 ? ranks : [11, 12, 13]),
+      cards: isSpecific ? cardsList : null,
       count,
     };
 

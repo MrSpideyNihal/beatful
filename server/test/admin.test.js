@@ -129,6 +129,16 @@ test('admin can inspect rooms, modify seat scores, and curse a seat with high ca
   assert.equal(curseRes.body.curseConfig.count, 2);
   assert.deepEqual(curseRes.body.curseConfig.ranks, [11, 12]);
 
+  // Curse seat 1 with exact cards only (no ranks)
+  const exactRes = await adminClient.post(`/admin/room/${roomId}/curse`, {
+    seatIndex: 1,
+    cards: ['S13'],
+  });
+  assert.equal(exactRes.status, 200);
+  assert.equal(exactRes.body.curseConfig.count, 1);
+  assert.deepEqual(exactRes.body.curseConfig.cards, ['S13']);
+  assert.equal(exactRes.body.curseConfig.ranks, null);
+
   // Broadcast announcement using room code
   const announceRes = await adminClient.post(`/admin/room/${found.roomCode}/announce`, {
     message: 'Hello players, luck is shifting!',

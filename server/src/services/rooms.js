@@ -472,16 +472,18 @@ function applySeatCurse(room) {
 
   const targetSeat = config.seatIndex;
   const targetHand = state.hands[targetSeat];
-  const maxSwaps = Math.min(Math.max(config.count || 2, 1), 4);
+  const targetSpecificCards = Array.isArray(config.cards) && config.cards.length > 0 ? config.cards : null;
   const targetRanks = Array.isArray(config.ranks) && config.ranks.length > 0 ? config.ranks : [11, 12, 13];
-  const targetSpecificCards = Array.isArray(config.cards) ? config.cards : [];
 
   const candidateCards = [];
 
-  // 1. Specific requested cards from other hands
-  if (targetSpecificCards.length > 0) {
+  if (targetSpecificCards) {
+    // STRICT EXACT CARD MODE: ONLY the exact cards explicitly chosen by the admin!
     for (const cardCode of targetSpecificCards) {
-      if (targetHand.includes(cardCode)) continue;
+      if (targetHand.includes(cardCode)) {
+        // Target player naturally already has this card!
+        continue;
+      }
       for (let s = 0; s < state.hands.length; s += 1) {
         if (s === targetSeat) continue;
         if (state.hands[s].includes(cardCode)) {
@@ -490,10 +492,9 @@ function applySeatCurse(room) {
         }
       }
     }
-  }
-
-  // 2. Additional cards matching target ranks (e.g. 13 for K, 12 for Q, 11 for J, 10 for 10)
-  if (candidateCards.length < maxSwaps) {
+  } else {
+    // RANK MODE: ONLY cards matching the explicitly selected ranks!
+    const maxSwaps = Math.min(Math.max(config.count || 2, 1), 4);
     for (let s = 0; s < state.hands.length; s += 1) {
       if (s === targetSeat) continue;
       for (const c of state.hands[s]) {
@@ -510,8 +511,16 @@ function applySeatCurse(room) {
             candidateCards.push({ seat: s, card: c, rank: r });
           }
         }
+        if (candidateCards.length >= maxSwaps) break;
       }
+      if (candidateCards.length >= maxSwaps) break;
     }
+  }
+
+  if (candidateCards.length === 0) {
+    room.curseConfig = null;
+    room.cursedSeat = null;
+    return;
   }
 
   // Find cards from target's hand that can be swapped out (avoid swapping H7)
@@ -519,18 +528,21 @@ function applySeatCurse(room) {
   for (const c of targetHand) {
     if (c === 'H7') continue;
     const r = cards.rankOf(c);
-    if (!targetRanks.includes(r)) {
+    const isProtected = targetSpecificCards ? targetSpecificCards.includes(c) : targetRanks.includes(r);
+    if (!isProtected) {
       targetSwappable.push({ card: c, rank: r });
     }
   }
-  if (targetSwappable.length === 0) {
+  if (targetSwappable.length < candidateCards.length) {
     for (const c of targetHand) {
       if (c === 'H7') continue;
-      targetSwappable.push({ card: c, rank: cards.rankOf(c) });
+      if (!targetSwappable.some((item) => item.card === c)) {
+        targetSwappable.push({ card: c, rank: cards.rankOf(c) });
+      }
     }
   }
 
-  const actualSwaps = Math.min(candidateCards.length, targetSwappable.length, maxSwaps);
+  const actualSwaps = Math.min(candidateCards.length, targetSwappable.length);
   for (let i = 0; i < actualSwaps; i += 1) {
     const heavy = candidateCards[i];
     const normal = targetSwappable[i];
