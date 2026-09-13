@@ -1124,8 +1124,18 @@ function listRoomsAdmin() {
   return roomsList;
 }
 
+async function resolveRoom(identifier) {
+  const idStr = String(identifier || '').trim();
+  let room = cache.get(idStr) || (await loadRoomById(idStr));
+  if (!room && idStr.length <= 10) {
+    room = await loadRoomByCode(idStr.toUpperCase());
+  }
+  if (!room) throw apiError('ROOM_NOT_FOUND', 'Room not found by ID or Code.');
+  return room;
+}
+
 async function setSeatScore(roomId, seatIndex, score) {
-  const room = await requireRoom(roomId);
+  const room = await resolveRoom(roomId);
   return withLock(room._id, async () => {
     const state = room.gameState;
     if (!state) throw apiError('NOT_STARTED', 'No active game in this room.');
@@ -1145,12 +1155,29 @@ async function setSeatScore(roomId, seatIndex, score) {
 }
 
 async function setSeatCurse(roomId, seatIndex) {
-  const room = await requireRoom(roomId);
+  const room = await resolveRoom(roomId);
   return withLock(room._id, async () => {
     room.cursedSeat = seatIndex;
     if (room.gameState && room.gameState.status === engine.STATUS.IN_PROGRESS && room.gameState.log.length <= 2) {
       applySeatCurse(room);
     }
+    await commit(room);
+    return room;
+  });
+}
+
+async function announceAdmin(roomId, message) {
+  const room = await resolveRoom(roomId);
+  return withLock(room._id, async () => {
+    pushNotice(room, {
+      kind: 'chat',
+      fromUserId: 'admin',
+      fromName: 'System Broadcast',
+      fromSeat: null,
+      seatIndex: null,
+      messageIndex: -1,
+      text: message.startsWith('📢') ? message : `📢 [System]: ${message}`,
+    });
     await commit(room);
     return room;
   });
@@ -1192,5 +1219,6 @@ module.exports = {
   listRoomsAdmin,
   setSeatScore,
   setSeatCurse,
+  announceAdmin,
   resetCache,
 };

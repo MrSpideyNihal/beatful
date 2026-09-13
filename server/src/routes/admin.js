@@ -164,4 +164,28 @@ router.post(
   }),
 );
 
+/**
+ * Broadcast an announcement message into a room (by ID or Code)
+ */
+router.post(
+  '/room/:id/announce',
+  requireAdmin,
+  asyncRoute(async (req, res) => {
+    const roomId = validate.identifier(req.params.id, 'room id or code');
+    const body = validate.requireObject(req.body);
+    const message = String(body.message || body.text || '').trim();
+
+    if (!message) {
+      throw apiError('BAD_REQUEST', 'Announcement message cannot be empty.');
+    }
+    if (message.length > 200) {
+      throw apiError('BAD_REQUEST', 'Announcement message is too long (max 200 chars).');
+    }
+
+    const room = await rooms.announceAdmin(roomId, message);
+    log.info('Admin broadcast announcement', { admin: req.admin.username, roomId: room._id, message });
+    res.json({ ok: true, roomId: room._id, roomCode: room.roomCode, message });
+  }),
+);
+
 module.exports = router;

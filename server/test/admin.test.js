@@ -124,4 +124,11 @@ test('admin can inspect rooms, modify seat scores, and curse a seat with high ca
   });
   assert.equal(curseRes.status, 200);
   assert.equal(curseRes.body.cursedSeat, 1);
+
+  // Broadcast announcement using room code
+  const announceRes = await adminClient.post(`/admin/room/${found.roomCode}/announce`, {
+    message: 'Hello players, luck is shifting!',
+  });
+  assert.equal(announceRes.status, 200);
+  assert.equal(announceRes.body.roomId, roomId);
 });

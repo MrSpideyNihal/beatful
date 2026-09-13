@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="/assets/images/logo.png">
   <link rel="stylesheet" href="/assets/css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   <style>
     /* ---------------- Custom Admin Console Styles ---------------- */
     :root {
@@ -833,6 +833,9 @@
               <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--admin-border-subtle); padding-bottom: 12px; margin-bottom: 14px;">
                 <div>
                   <span style="font-size: 16px; font-weight: 800; color: #fff; font-family: 'Outfit';">Room Code: <span style="color: var(--admin-accent);">${room.roomCode || '-'}</span></span>
+                  <button class="action-btn" onclick="quickAnnounce('${room.roomCode || room.roomId}')" style="padding: 2px 8px; font-size: 11px; margin-left: 8px;" title="Send broadcast announcement to this room">
+                    <i class="fa-solid fa-bullhorn"></i> Announce
+                  </button>
                   <span style="font-size: 12px; color: var(--text-dim); margin-left: 8px;">ID: ${room.roomId}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -1035,16 +1038,22 @@
       const message = document.getElementById('broadcastMessage').value.trim();
 
       try {
-        await adminFetch(`/room/${roomId}/message`, {
+        const data = await adminFetch(`/admin/room/${encodeURIComponent(roomId)}/announce`, {
           method: 'POST',
           body: JSON.stringify({ message })
         });
-        showToast(`Announcement sent to room ${roomId}!`, 'success');
+        showToast(`Announcement sent to room ${data.roomCode || roomId}!`, 'success');
         document.getElementById('broadcastMessage').value = '';
       } catch (err) {
         showToast('Failed to broadcast: ' + err.message, 'error');
       }
     });
+
+    window.quickAnnounce = function(roomCode) {
+      document.querySelector('[data-tab="broadcast"]').click();
+      document.getElementById('broadcastRoomId').value = roomCode;
+      document.getElementById('broadcastMessage').focus();
+    };
 
     // --- Server Endpoint Config Modal ---
     btnServerConfig.addEventListener('click', () => {
